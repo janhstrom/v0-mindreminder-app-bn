@@ -1,50 +1,43 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-import type { z } from "zod"
+import { createClient } from "@/lib/supabase/server"
 import { profileSchema } from "@/types/zod-schemas"
 
-type ProfileState = {
-  message: string
-  success: boolean
-  errors?: z.ZodIssue[]
-}
-
-export async function updateProfile(prevState: ProfileState, formData: FormData): Promise<ProfileState> {
+export async function updateProfile(prevState: any, formData: FormData) {
   const supabase = createClient()
-
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) {
     return {
-      message: "Not authenticated",
       success: false,
+      message: "Authentication error. Please sign in again.",
+      errors: [],
     }
   }
 
   const validatedFields = profileSchema.safeParse({
-    full_name: formData.get("fullName"),
-    username: formData.get("username"),
+    first_name: formData.get("first_name"),
+    last_name: formData.get("last_name"),
   })
 
   if (!validatedFields.success) {
     return {
-      message: "Invalid form data.",
       success: false,
-      errors: validatedFields.error.errors,
+      message: "Invalid form data.",
+      errors: validatedFields.error.flatten().fieldErrors,
     }
   }
 
-  const { full_name, username } = validatedFields.data
+  const { first_name, last_name } = validatedFields.data
 
   const { error } = await supabase
     .from("profiles")
     .update({
-      full_name,
-      username,
+      first_name,
+      last_name,
       updated_at: new Date().toISOString(),
     })
     .eq("id", user.id)
@@ -52,14 +45,17 @@ export async function updateProfile(prevState: ProfileState, formData: FormData)
   if (error) {
     console.error("Error updating profile:", error)
     return {
-      message: "Database error: Could not update profile.",
       success: false,
+      message: "Failed to update profile. Please try again.",
+      errors: [],
     }
   }
 
   revalidatePath("/dashboard/settings")
+  revalidatePath("/dashboard") // Revalidate layout to update header
   return {
-    message: "Profile updated successfully!",
     success: true,
+    message: "Profile updated successfully!",
+    errors: [],
   }
 }

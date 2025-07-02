@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
 import { SettingsForm } from "@/components/settings/settings-form"
 import type { Profile } from "@/types"
 
@@ -14,22 +14,28 @@ export default async function SettingsPage() {
     redirect("/login")
   }
 
-  const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+  const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", user.id).single<Profile>()
 
   if (error || !profile) {
-    console.error("Error fetching profile:", error)
-    // Handle case where profile doesn't exist yet, maybe redirect to a profile setup page
-    // For now, we'll just show an error or a default state in the form.
+    // This can happen if the profile trigger failed or was created after the user signed up.
+    // For now, we'll redirect, but a better UX would be to prompt them to create a profile.
+    console.error("Error fetching profile for settings page:", error)
+    redirect("/dashboard?message=Could not load profile.")
+  }
+
+  // We need to combine user email with profile data for the form
+  const userProfile = {
+    ...profile,
+    email: user.email!,
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-      <div className="grid w-full max-w-6xl gap-2">
-        <h1 className="text-3xl font-semibold">Settings</h1>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium">Settings</h3>
+        <p className="text-sm text-muted-foreground">Manage your account and profile settings.</p>
       </div>
-      <div className="grid w-full max-w-6xl items-start gap-6">
-        <SettingsForm profile={profile as Profile} />
-      </div>
-    </main>
+      <SettingsForm profile={userProfile} />
+    </div>
   )
 }

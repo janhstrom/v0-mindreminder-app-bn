@@ -1,25 +1,56 @@
 import Link from "next/link"
-import { Home, BarChart, Settings } from "lucide-react"
+import { BotMessageSquare, Home, ListTodo, Package, Users, LineChart, Settings } from "lucide-react"
 
-export default function Sidebar() {
+export function Sidebar() {
   return (
-    <div className="hidden border-r bg-gray-100/40 lg:block h-full w-60">
-      <div className="p-6">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-        >
-          <Home className="h-4 w-4" />
-          Dashboard
-        </Link>
-        <nav className="mt-6 space-y-1">
-          <Link
-            href="/dashboard/analytics"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-          >
-            <BarChart className="h-4 w-4" />
-            Analytics
+    <div className="hidden border-r bg-muted/40 md:block">
+      <div className="flex h-full max-h-screen flex-col gap-2">
+        <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+          <Link href="/" className="flex items-center gap-2 font-semibold">
+            <BotMessageSquare className="h-6 w-6" />
+            <span className="">MindReMinder</span>
           </Link>
+        </div>
+        <div className="flex-1">
+          <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+            >
+              <Home className="h-4 w-4" />
+              Dashboard
+            </Link>
+            <Link
+              href="/dashboard/reminders"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+            >
+              <ListTodo className="h-4 w-4" />
+              Reminders
+            </Link>
+            <Link
+              href="/dashboard/micro-actions"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+            >
+              <Package className="h-4 w-4" />
+              Micro-Actions
+            </Link>
+            <Link
+              href="/dashboard/friends"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+            >
+              <Users className="h-4 w-4" />
+              Friends
+            </Link>
+            <Link
+              href="/dashboard/analytics"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+            >
+              <LineChart className="h-4 w-4" />
+              Analytics
+            </Link>
+          </nav>
+        </div>
+        <div className="mt-auto p-4">
           <Link
             href="/dashboard/settings"
             className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
@@ -27,7 +58,7 @@ export default function Sidebar() {
             <Settings className="h-4 w-4" />
             Settings
           </Link>
-        </nav>
+        </div>
       </div>
     </div>
   )
