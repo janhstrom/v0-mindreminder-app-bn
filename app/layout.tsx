@@ -9,7 +9,14 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "MindReMinder - Your Personal Mindfulness & Reminder App",
   description:
-    "Stay mindful, organized, and motivated with personalized reminders, micro-actions, and daily inspiration.",
+    "Stay mindful, organized, and connected with MindReMinder. Set reminders, practice micro-actions, share inspirational quotes, and connect with friends.",
+  keywords: "mindfulness, reminders, productivity, wellness, quotes, micro-actions",
+  authors: [{ name: "MindReMinder Team" }],
+  openGraph: {
+    title: "MindReMinder - Your Personal Mindfulness & Reminder App",
+    description: "Stay mindful, organized, and connected with MindReMinder.",
+    type: "website",
+  },
     generator: 'v0.dev'
 }
 
@@ -19,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
