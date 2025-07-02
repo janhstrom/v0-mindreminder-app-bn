@@ -1,36 +1,18 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import DashboardClientContent from '@/components/dashboard/dashboard-client-content'
-import { Header } from '@/components/dashboard/header'
-import { Sidebar } from '@/components/dashboard/sidebar'
-
-export default async function DashboardPage() {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return redirect('/login')
-  }
-
-  // Fetch profile and other data here
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
+export default function Dashboard() {
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <Sidebar />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-        <Header user={user} profile={profile} />
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-          <DashboardClientContent user={user} />
-        </main>
+    <>
+      <div className="flex items-center">
+        <h1 className="text-lg font-semibold md:text-2xl">Dashboard</h1>
       </div>
-    </div>
+      <div
+        className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm"
+        x-chunk="dashboard-02-chunk-1"
+      >
+        <div className="flex flex-col items-center gap-1 text-center">
+          <h3 className="text-2xl font-bold tracking-tight">You have no reminders yet</h3>
+          <p className="text-sm text-muted-foreground">Start by creating a new reminder to stay on track.</p>
+        </div>
+      </div>
+    </>
   )
 }
