@@ -1,8 +1,9 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
+import { cookies } from "next/headers"
+import { createClient, createServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { revalidatePath } from "next/cache"
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
@@ -50,8 +51,12 @@ export async function signup(formData: FormData) {
   redirect("/login?message=Check email to continue sign in process")
 }
 
+/** Server Action – ends the user session and clears cookies. */
 export async function signOut() {
-  const supabase = await createClient()
+  const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
+    cookies,
+  })
+
   await supabase.auth.signOut()
   revalidatePath("/", "layout")
   redirect("/login")

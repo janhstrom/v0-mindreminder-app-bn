@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import QuoteGenerator from "@/components/quotes/quote-generator"
 import {
   Bell,
   Target,
@@ -406,6 +407,14 @@ export default async function LandingPage() {
                 </Button>
               </Link>
             </div>
+          </div>
+        </section>
+
+        {/* Welcome Section */}
+        <section className="py-20 px-4 bg-gray-50">
+          <div className="container mx-auto text-center">
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900">Welcome to MindReMinder</h1>
+            <QuoteGenerator />
           </div>
         </section>
       </main>
