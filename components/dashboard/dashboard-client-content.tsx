@@ -1,15 +1,16 @@
 "use client"
 
-import { useState } from "react"
-import { Header } from "@/components/dashboard/header"
-import { Sidebar } from "@/components/dashboard/sidebar"
-import { QuoteGenerator } from "@/components/quotes/quote-generator"
-import { CreateReminderModal } from "@/components/reminders/create-reminder-modal"
-import { CreateMicroActionModal } from "@/components/micro-actions/create-micro-action-modal"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Bell, Target, TrendingUp, Calendar, CheckCircle, Clock } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { Bell, Target, Users, TrendingUp, Plus, CheckCircle2, Clock } from "lucide-react"
+import { Header } from "@/components/dashboard/header"
+import { Sidebar } from "@/components/dashboard/sidebar"
+import Link from "next/link"
 
 interface User {
   id: string
@@ -25,44 +26,137 @@ interface DashboardClientContentProps {
   user: User
 }
 
+interface DashboardStats {
+  totalReminders: number
+  activeReminders: number
+  completedReminders: number
+  totalMicroActions: number
+  completedMicroActions: number
+  weeklyProgress: number
+  currentStreak: number
+}
+
 export function DashboardClientContent({ user }: DashboardClientContentProps) {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalReminders: 0,
+    activeReminders: 0,
+    completedReminders: 0,
+    totalMicroActions: 0,
+    completedMicroActions: 0,
+    weeklyProgress: 0,
+    currentStreak: 0,
+  })
+  const [recentReminders, setRecentReminders] = useState<any[]>([])
+  const [recentMicroActions, setRecentMicroActions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [reminderModalOpen, setReminderModalOpen] = useState(false)
-  const [microActionModalOpen, setMicroActionModalOpen] = useState(false)
+  const router = useRouter()
+  const supabase = createClient()
+
+  useEffect(() => {
+    fetchDashboardData()
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || !session) {
+        router.push("/login")
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [router, supabase.auth])
+
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch reminders
+      const { data: reminders, error: remindersError } = await supabase
+        .from("reminders")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+
+      if (remindersError) {
+        console.error("Error fetching reminders:", remindersError)
+      }
+
+      // Fetch micro actions
+      const { data: microActions, error: microActionsError } = await supabase
+        .from("micro_actions")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+
+      if (microActionsError) {
+        console.error("Error fetching micro actions:", microActionsError)
+      }
+
+      // Calculate stats
+      const totalReminders = reminders?.length || 0
+      const completedReminders = reminders?.filter((r) => r.is_completed).length || 0
+      const activeReminders = totalReminders - completedReminders
+
+      const totalMicroActions = microActions?.length || 0
+      const completedMicroActions = microActions?.filter((ma) => ma.is_completed).length || 0
+
+      const totalItems = totalReminders + totalMicroActions
+      const completedItems = completedReminders + completedMicroActions
+      const weeklyProgress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
+
+      setStats({
+        totalReminders,
+        activeReminders,
+        completedReminders,
+        totalMicroActions,
+        completedMicroActions,
+        weeklyProgress,
+        currentStreak: 5, // Mock data for now
+      })
+
+      setRecentReminders(reminders?.slice(0, 3) || [])
+      setRecentMicroActions(microActions?.slice(0, 3) || [])
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut()
+      router.push("/login")
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
       <div className="lg:pl-72">
-        <Header user={user} setSidebarOpen={setSidebarOpen} />
+        <Header user={user} setSidebarOpen={setSidebarOpen} onLogout={handleLogout} />
 
         <main className="py-10">
           <div className="px-4 sm:px-6 lg:px-8">
-            {/* Welcome Section */}
+            {/* Welcome Header */}
             <div className="mb-8">
-              <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user.firstName || user.email}!</h1>
-              <p className="mt-1 text-sm text-gray-600">Here's what's happening with your habits and goals today.</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Welcome back, {user.firstName || user.email.split("@")[0]}!
+              </h1>
+              <p className="text-gray-600 mt-2">Here's what's happening with your mindfulness journey today.</p>
             </div>
 
-            {/* Quick Actions */}
-            <div className="mb-8">
-              <div className="flex flex-wrap gap-4">
-                <Button onClick={() => setReminderModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Reminder
-                </Button>
-                <Button
-                  onClick={() => setMicroActionModalOpen(true)}
-                  variant="outline"
-                  className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Micro-Action
-                </Button>
-              </div>
-            </div>
-
-            {/* Stats Cards */}
+            {/* Stats Grid */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
               <Card>
                 <CardContent className="p-6">
@@ -73,7 +167,7 @@ export function DashboardClientContent({ user }: DashboardClientContentProps) {
                     <div className="ml-5 w-0 flex-1">
                       <dl>
                         <dt className="text-sm font-medium text-gray-500 truncate">Active Reminders</dt>
-                        <dd className="text-lg font-medium text-gray-900">12</dd>
+                        <dd className="text-lg font-medium text-gray-900">{stats.activeReminders}</dd>
                       </dl>
                     </div>
                   </div>
@@ -84,12 +178,12 @@ export function DashboardClientContent({ user }: DashboardClientContentProps) {
                 <CardContent className="p-6">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <Target className="h-8 w-8 text-purple-600" />
+                      <Target className="h-8 w-8 text-green-600" />
                     </div>
                     <div className="ml-5 w-0 flex-1">
                       <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">Micro-Actions</dt>
-                        <dd className="text-lg font-medium text-gray-900">8</dd>
+                        <dt className="text-sm font-medium text-gray-500 truncate">Micro Actions</dt>
+                        <dd className="text-lg font-medium text-gray-900">{stats.totalMicroActions}</dd>
                       </dl>
                     </div>
                   </div>
@@ -100,157 +194,224 @@ export function DashboardClientContent({ user }: DashboardClientContentProps) {
                 <CardContent className="p-6">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <TrendingUp className="h-8 w-8 text-green-600" />
+                      <TrendingUp className="h-8 w-8 text-purple-600" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">Weekly Progress</dt>
+                        <dd className="text-lg font-medium text-gray-900">{stats.weeklyProgress}%</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <Users className="h-8 w-8 text-orange-600" />
                     </div>
                     <div className="ml-5 w-0 flex-1">
                       <dl>
                         <dt className="text-sm font-medium text-gray-500 truncate">Current Streak</dt>
-                        <dd className="text-lg font-medium text-gray-900">7 days</dd>
+                        <dd className="text-lg font-medium text-gray-900">{stats.currentStreak} days</dd>
                       </dl>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Progress Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Weekly Progress</CardTitle>
+                  <CardDescription>Your completion rate this week</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Overall Completion</span>
+                        <span className="text-sm text-gray-500">{stats.weeklyProgress}%</span>
+                      </div>
+                      <Progress value={stats.weeklyProgress} className="h-2" />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Reminders</span>
+                        <span className="text-sm text-gray-500">
+                          {stats.completedReminders}/{stats.totalReminders}
+                        </span>
+                      </div>
+                      <Progress
+                        value={stats.totalReminders > 0 ? (stats.completedReminders / stats.totalReminders) * 100 : 0}
+                        className="h-2"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Micro Actions</span>
+                        <span className="text-sm text-gray-500">
+                          {stats.completedMicroActions}/{stats.totalMicroActions}
+                        </span>
+                      </div>
+                      <Progress
+                        value={
+                          stats.totalMicroActions > 0
+                            ? (stats.completedMicroActions / stats.totalMicroActions) * 100
+                            : 0
+                        }
+                        className="h-2"
+                      />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <CheckCircle className="h-8 w-8 text-orange-600" />
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">Completed Today</dt>
-                        <dd className="text-lg font-medium text-gray-900">5</dd>
-                      </dl>
-                    </div>
-                  </div>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                  <CardDescription>Get started with your mindfulness practice</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Link href="/dashboard/reminders">
+                    <Button className="w-full justify-start bg-transparent" variant="outline">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create New Reminder
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard/micro-actions">
+                    <Button className="w-full justify-start bg-transparent" variant="outline">
+                      <Target className="h-4 w-4 mr-2" />
+                      Add Micro Action
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard/friends">
+                    <Button className="w-full justify-start bg-transparent" variant="outline">
+                      <Users className="h-4 w-4 mr-2" />
+                      Connect with Friends
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard/analytics">
+                    <Button className="w-full justify-start bg-transparent" variant="outline">
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      View Analytics
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-              {/* Left Column */}
-              <div className="lg:col-span-2 space-y-8">
-                {/* Today's Schedule */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Calendar className="w-5 h-5 mr-2" />
-                      Today's Schedule
-                    </CardTitle>
-                    <CardDescription>Your reminders and micro-actions for today</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {[
-                        { time: "9:00 AM", title: "Morning meditation", type: "reminder", completed: true },
-                        { time: "12:00 PM", title: "Drink water", type: "micro-action", completed: true },
-                        { time: "3:00 PM", title: "Take a 5-minute walk", type: "micro-action", completed: false },
-                        { time: "6:00 PM", title: "Evening gratitude", type: "reminder", completed: false },
-                        { time: "9:00 PM", title: "Read one page", type: "micro-action", completed: false },
-                      ].map((item, index) => (
-                        <div key={index} className="flex items-center space-x-4 p-3 rounded-lg border">
-                          <div className="flex-shrink-0">
-                            <Clock className="w-4 h-4 text-gray-400" />
+            {/* Recent Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Recent Reminders</CardTitle>
+                    <CardDescription>Your latest reminders</CardDescription>
+                  </div>
+                  <Link href="/dashboard/reminders">
+                    <Button variant="outline" size="sm">
+                      View All
+                    </Button>
+                  </Link>
+                </CardHeader>
+                <CardContent>
+                  {recentReminders.length === 0 ? (
+                    <div className="text-center py-6">
+                      <Bell className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-500">No reminders yet</p>
+                      <Link href="/dashboard/reminders">
+                        <Button size="sm" className="mt-2">
+                          Create Your First Reminder
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {recentReminders.map((reminder) => (
+                        <div key={reminder.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-shrink-0">
+                              {reminder.is_completed ? (
+                                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                              ) : (
+                                <Clock className="h-5 w-5 text-gray-400" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{reminder.title}</p>
+                              <p className="text-xs text-gray-500">
+                                {new Date(reminder.reminder_time).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900">{item.title}</p>
-                            <p className="text-sm text-gray-500">{item.time}</p>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <Badge variant={item.type === "reminder" ? "default" : "secondary"}>{item.type}</Badge>
-                          </div>
-                          <div className="flex-shrink-0">
-                            {item.completed ? (
-                              <CheckCircle className="w-5 h-5 text-green-500" />
-                            ) : (
-                              <div className="w-5 h-5 border-2 border-gray-300 rounded-full" />
-                            )}
-                          </div>
+                          <Badge variant={reminder.is_completed ? "default" : "secondary"}>
+                            {reminder.is_completed ? "Done" : "Pending"}
+                          </Badge>
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
+                  )}
+                </CardContent>
+              </Card>
 
-                {/* Recent Activity */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recent Activity</CardTitle>
-                    <CardDescription>Your latest habit completions and milestones</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {[
-                        { action: "Completed morning meditation", time: "2 hours ago", type: "completion" },
-                        { action: "7-day streak achieved!", time: "1 day ago", type: "milestone" },
-                        { action: "Added new micro-action: Drink water", time: "2 days ago", type: "creation" },
-                        { action: "Completed evening gratitude", time: "3 days ago", type: "completion" },
-                      ].map((activity, index) => (
-                        <div key={index} className="flex items-center space-x-4">
-                          <div className="flex-shrink-0">
-                            <div
-                              className={`w-2 h-2 rounded-full ${
-                                activity.type === "milestone"
-                                  ? "bg-yellow-400"
-                                  : activity.type === "completion"
-                                    ? "bg-green-400"
-                                    : "bg-blue-400"
-                              }`}
-                            />
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Recent Micro Actions</CardTitle>
+                    <CardDescription>Your latest micro actions</CardDescription>
+                  </div>
+                  <Link href="/dashboard/micro-actions">
+                    <Button variant="outline" size="sm">
+                      View All
+                    </Button>
+                  </Link>
+                </CardHeader>
+                <CardContent>
+                  {recentMicroActions.length === 0 ? (
+                    <div className="text-center py-6">
+                      <Target className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-500">No micro actions yet</p>
+                      <Link href="/dashboard/micro-actions">
+                        <Button size="sm" className="mt-2">
+                          Create Your First Action
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {recentMicroActions.map((action) => (
+                        <div key={action.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-shrink-0">
+                              {action.is_completed ? (
+                                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                              ) : (
+                                <Target className="h-5 w-5 text-gray-400" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{action.title}</p>
+                              <p className="text-xs text-gray-500 capitalize">{action.category}</p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                            <p className="text-sm text-gray-500">{activity.time}</p>
-                          </div>
+                          <Badge variant={action.is_completed ? "default" : "secondary"}>
+                            {action.is_completed ? "Done" : "Pending"}
+                          </Badge>
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Right Column */}
-              <div className="space-y-8">
-                {/* Daily Quote */}
-                <QuoteGenerator />
-
-                {/* Quick Stats */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>This Week</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Completion Rate</span>
-                        <span className="text-sm font-medium">85%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: "85%" }}></div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Total Actions</span>
-                        <span className="text-sm font-medium">34</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Best Streak</span>
-                        <span className="text-sm font-medium">12 days</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </main>
       </div>
-
-      {/* Modals */}
-      <CreateReminderModal open={reminderModalOpen} onOpenChange={setReminderModalOpen} />
-      <CreateMicroActionModal open={microActionModalOpen} onOpenChange={setMicroActionModalOpen} />
     </div>
   )
 }

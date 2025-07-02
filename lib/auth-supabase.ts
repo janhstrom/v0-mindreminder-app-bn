@@ -11,7 +11,53 @@ export interface AuthUser {
 }
 
 export class SupabaseAuthService {
+  private static instance: SupabaseAuthService
   private supabase = createClient()
+
+  static getInstance(): SupabaseAuthService {
+    if (!SupabaseAuthService.instance) {
+      SupabaseAuthService.instance = new SupabaseAuthService()
+    }
+    return SupabaseAuthService.instance
+  }
+
+  async signIn(email: string, password: string) {
+    const { data, error } = await this.supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      throw error
+    }
+
+    return data
+  }
+
+  async signUp(email: string, password: string, fullName: string) {
+    const { data, error } = await this.supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
+    })
+
+    if (error) {
+      throw error
+    }
+
+    return data
+  }
+
+  async signOut() {
+    const { error } = await this.supabase.auth.signOut()
+    if (error) {
+      throw error
+    }
+  }
 
   async getCurrentUser(): Promise<AuthUser | null> {
     try {
@@ -46,36 +92,42 @@ export class SupabaseAuthService {
     }
   }
 
-  async signOut(): Promise<void> {
-    const { error } = await this.supabase.auth.signOut()
+  async register(userData: { email: string; password: string; full_name: string }) {
+    const { data, error } = await this.supabase.auth.signUp({
+      email: userData.email,
+      password: userData.password,
+      options: {
+        data: {
+          full_name: userData.full_name,
+        },
+      },
+    })
+
     if (error) {
       throw error
     }
-  }
 
-  async updateProfile(updates: {
-    firstName?: string
-    lastName?: string
-    email?: string
-    profileImage?: string
-  }): Promise<void> {
-    const user = await this.getCurrentUser()
-    if (!user) throw new Error("No authenticated user")
+    // Create profile record
+    if (data.user) {
+      const nameParts = userData.full_name.split(" ")
+      const firstName = nameParts[0] || ""
+      const lastName = nameParts.slice(1).join(" ") || ""
 
-    const { error } = await this.supabase
-      .from("profiles")
-      .update({
-        first_name: updates.firstName,
-        last_name: updates.lastName,
-        email: updates.email,
-        profile_image_url: updates.profileImage,
+      const { error: profileError } = await this.supabase.from("profiles").insert({
+        id: data.user.id,
+        email: userData.email,
+        first_name: firstName,
+        last_name: lastName,
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .eq("id", user.id)
 
-    if (error) {
-      throw error
+      if (profileError) {
+        console.error("Error creating profile:", profileError)
+      }
     }
+
+    return data
   }
 }
 
