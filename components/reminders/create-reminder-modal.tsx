@@ -19,8 +19,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from "date-fns"
 import { CalendarIcon, Plus } from "lucide-react"
+import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 
 interface CreateReminderModalProps {
@@ -30,7 +30,7 @@ interface CreateReminderModalProps {
     date: Date
     time: string
     frequency: string
-    priority: string
+    category: string
   }) => void
 }
 
@@ -41,14 +41,14 @@ export function CreateReminderModal({ onCreateReminder }: CreateReminderModalPro
   const [date, setDate] = useState<Date>()
   const [time, setTime] = useState("")
   const [frequency, setFrequency] = useState("once")
-  const [priority, setPriority] = useState("medium")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [category, setCategory] = useState("personal")
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title || !date) return
+    if (!title || !date || !time) return
 
-    setIsSubmitting(true)
+    setIsLoading(true)
     try {
       await onCreateReminder({
         title,
@@ -56,7 +56,7 @@ export function CreateReminderModal({ onCreateReminder }: CreateReminderModalPro
         date,
         time,
         frequency,
-        priority,
+        category,
       })
 
       // Reset form
@@ -65,12 +65,12 @@ export function CreateReminderModal({ onCreateReminder }: CreateReminderModalPro
       setDate(undefined)
       setTime("")
       setFrequency("once")
-      setPriority("medium")
+      setCategory("personal")
       setOpen(false)
     } catch (error) {
       console.error("Error creating reminder:", error)
     } finally {
-      setIsSubmitting(false)
+      setIsLoading(false)
     }
   }
 
@@ -129,15 +129,15 @@ export function CreateReminderModal({ onCreateReminder }: CreateReminderModalPro
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="time">Time</Label>
-                <Input id="time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+                <Input id="time" type="time" value={time} onChange={(e) => setTime(e.target.value)} required />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>Frequency</Label>
+                <Label htmlFor="frequency">Frequency</Label>
                 <Select value={frequency} onValueChange={setFrequency}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="once">Once</SelectItem>
@@ -148,15 +148,17 @@ export function CreateReminderModal({ onCreateReminder }: CreateReminderModalPro
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label>Priority</Label>
-                <Select value={priority} onValueChange={setPriority}>
+                <Label htmlFor="category">Category</Label>
+                <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="personal">Personal</SelectItem>
+                    <SelectItem value="work">Work</SelectItem>
+                    <SelectItem value="health">Health</SelectItem>
+                    <SelectItem value="learning">Learning</SelectItem>
+                    <SelectItem value="social">Social</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -166,8 +168,8 @@ export function CreateReminderModal({ onCreateReminder }: CreateReminderModalPro
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || !title || !date}>
-              {isSubmitting ? "Creating..." : "Create Reminder"}
+            <Button type="submit" disabled={isLoading || !title || !date || !time}>
+              {isLoading ? "Creating..." : "Create Reminder"}
             </Button>
           </DialogFooter>
         </form>
