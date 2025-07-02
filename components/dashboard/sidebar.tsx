@@ -1,15 +1,14 @@
 import Link from "next/link"
-import { Bell, Home, Users, LineChart, Package, Package2, ShoppingCart } from "lucide-react"
+import { Bell, Home, Users, LineChart, Package, Settings, BotMessageSquare, ListTodo } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export function Sidebar() {
   return (
     <div className="hidden border-r bg-muted/40 md:block">
       <div className="flex h-full max-h-screen flex-col gap-2">
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <Package2 className="h-6 w-6" />
+          <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+            <BotMessageSquare className="h-6 w-6" />
             <span className="">MindReMinder</span>
           </Link>
           <Button variant="outline" size="icon" className="ml-auto h-8 w-8 bg-transparent">
@@ -30,12 +29,12 @@ export function Sidebar() {
               href="/dashboard/reminders"
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
             >
-              <ShoppingCart className="h-4 w-4" />
+              <ListTodo className="h-4 w-4" />
               Reminders
             </Link>
             <Link
               href="/dashboard/micro-actions"
-              className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
             >
               <Package className="h-4 w-4" />
               Micro-Actions
@@ -57,17 +56,13 @@ export function Sidebar() {
           </nav>
         </div>
         <div className="mt-auto p-4">
-          <Card x-chunk="dashboard-02-chunk-0">
-            <CardHeader className="p-2 pt-0 md:p-4">
-              <CardTitle>Upgrade to Pro</CardTitle>
-              <CardDescription>Unlock all features and get unlimited access to our support team.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-2 pt-0 md:p-4 md:pt-0">
-              <Button size="sm" className="w-full">
-                Upgrade
-              </Button>
-            </CardContent>
-          </Card>
+          <Link
+            href="/dashboard/settings"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+          >
+            <Settings className="h-4 w-4" />
+            Settings
+          </Link>
         </div>
       </div>
     </div>

@@ -37,6 +37,14 @@ export interface Friend {
   createdAt: Date
 }
 
+export interface Profile {
+  id: string
+  created_at: string
+  first_name: string | null
+  last_name: string | null
+  profile_image_url: string | null
+}
+
 export type QuoteTopic =
   | "motivation"
   | "success"
