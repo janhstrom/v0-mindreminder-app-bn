@@ -1,11 +1,11 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { createClient as createServerClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { MicroActionsPageClient } from "@/components/dashboard/micro-actions-page-client"
 
 export default async function MicroActionsPage() {
   const cookieStore = cookies()
-  const supabase = createServerClient(cookieStore)
+  const supabase = createClient(cookieStore)
 
   const {
     data: { user },
