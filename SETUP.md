@@ -168,7 +168,7 @@ Then deploy to Vercel or your preferred hosting platform.
 
 Finally, let's update the main dashboard to use Supabase quotes:
 
-```typescriptreact file="app/dashboard/page.tsx"
+\`\`\`typescriptreact file="app/dashboard/page.tsx"
 [v0-no-op-code-block-prefix]"use client"
 
 import type React from "react"
