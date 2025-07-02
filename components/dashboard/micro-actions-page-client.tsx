@@ -1,47 +1,119 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Plus, Target, CheckCircle2, Circle, Zap, Edit, Trash2 } from "lucide-react"
 import { Header } from "@/components/dashboard/header"
 import { Sidebar } from "@/components/dashboard/sidebar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Target, CheckCircle, Clock, Trash2 } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
-import { toast } from "sonner"
-
-interface HeaderUser {
-  id: string
-  email: string
-  firstName?: string
-  lastName?: string
-  profileImage?: string | null
-  createdAt: string
-  emailConfirmed: boolean
-}
+import { CreateMicroActionModal } from "@/components/micro-actions/create-micro-action-modal"
 
 interface MicroAction {
   id: string
   title: string
-  description?: string
+  description: string
   category: string
   is_completed: boolean
+  completed_at: string | null
   created_at: string
 }
 
 interface MicroActionsPageClientProps {
-  user: HeaderUser
+  user: {
+    id: string
+    email: string
+    firstName: string
+    lastName: string
+    profileImage: string | null
+    createdAt: string
+    emailConfirmed: boolean
+  }
 }
 
 export function MicroActionsPageClient({ user }: MicroActionsPageClientProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [microActions, setMicroActions] = useState<MicroAction[]>([])
   const [loading, setLoading] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [microActionModalOpen, setMicroActionModalOpen] = useState(false)
+  const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
+    const fetchMicroActions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("micro_actions")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+
+        if (error) {
+          console.error("Error fetching micro actions:", error)
+          return
+        }
+
+        setMicroActions(data || [])
+      } catch (error) {
+        console.error("Failed to fetch micro actions:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
     fetchMicroActions()
-  }, [])
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || !session) {
+        router.push("/login")
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [router, supabase.auth, user.id])
+
+  const toggleMicroActionComplete = async (actionId: string, isCompleted: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("micro_actions")
+        .update({
+          is_completed: !isCompleted,
+          completed_at: !isCompleted ? new Date().toISOString() : null,
+        })
+        .eq("id", actionId)
+
+      if (error) {
+        console.error("Error updating micro action:", error)
+        return
+      }
+
+      // Refresh micro actions
+      await fetchMicroActions()
+    } catch (error) {
+      console.error("Failed to update micro action:", error)
+    }
+  }
+
+  const deleteMicroAction = async (actionId: string) => {
+    try {
+      const { error } = await supabase.from("micro_actions").delete().eq("id", actionId)
+
+      if (error) {
+        console.error("Error deleting micro action:", error)
+        return
+      }
+
+      // Refresh micro actions
+      await fetchMicroActions()
+    } catch (error) {
+      console.error("Failed to delete micro action:", error)
+    }
+  }
 
   const fetchMicroActions = async () => {
     try {
@@ -51,41 +123,14 @@ export function MicroActionsPageClient({ user }: MicroActionsPageClientProps) {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching micro actions:", error)
+        return
+      }
+
       setMicroActions(data || [])
     } catch (error) {
-      console.error("Error fetching micro actions:", error)
-      toast.error("Failed to load micro actions")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const completeMicroAction = async (id: string) => {
-    try {
-      const { error } = await supabase.from("micro_actions").update({ is_completed: true }).eq("id", id)
-
-      if (error) throw error
-
-      setMicroActions((prev) => prev.map((action) => (action.id === id ? { ...action, is_completed: true } : action)))
-      toast.success("Micro action completed!")
-    } catch (error) {
-      console.error("Error completing micro action:", error)
-      toast.error("Failed to complete micro action")
-    }
-  }
-
-  const deleteMicroAction = async (id: string) => {
-    try {
-      const { error } = await supabase.from("micro_actions").delete().eq("id", id)
-
-      if (error) throw error
-
-      setMicroActions((prev) => prev.filter((action) => action.id !== id))
-      toast.success("Micro action deleted!")
-    } catch (error) {
-      console.error("Error deleting micro action:", error)
-      toast.error("Failed to delete micro action")
+      console.error("Failed to fetch micro actions:", error)
     }
   }
 
@@ -94,145 +139,193 @@ export function MicroActionsPageClient({ user }: MicroActionsPageClientProps) {
       health: "bg-green-100 text-green-800",
       productivity: "bg-blue-100 text-blue-800",
       mindfulness: "bg-purple-100 text-purple-800",
-      social: "bg-pink-100 text-pink-800",
       learning: "bg-yellow-100 text-yellow-800",
+      social: "bg-pink-100 text-pink-800",
       default: "bg-gray-100 text-gray-800",
     }
-    return colors[category.toLowerCase()] || colors.default
+    return colors[category] || colors.default
   }
 
-  const activeActions = microActions.filter((a) => !a.is_completed)
-  const completedActions = microActions.filter((a) => a.is_completed)
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  const completedActions = microActions.filter((action) => action.is_completed)
+  const pendingActions = microActions.filter((action) => !action.is_completed)
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
-
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="lg:pl-72">
         <Header user={user} setSidebarOpen={setSidebarOpen} />
 
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
+        <main className="py-10">
+          <div className="px-4 sm:px-6 lg:px-8">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Micro Actions</h1>
-                <p className="text-gray-600 mt-1">Small steps that lead to big changes</p>
+                <p className="text-gray-600 mt-2">Small steps that lead to big changes</p>
               </div>
-              <Button>
+              <Button onClick={() => setMicroActionModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="h-4 w-4 mr-2" />
-                Create Micro Action
+                New Micro Action
               </Button>
             </div>
 
-            {/* Stats Cards */}
+            {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Actions</CardTitle>
-                  <Target className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{activeActions.length}</div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Completed Today</CardTitle>
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {
-                      completedActions.filter(
-                        (a) => new Date(a.created_at).toDateString() === new Date().toDateString(),
-                      ).length
-                    }
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <Target className="h-8 w-8 text-blue-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Total Actions</p>
+                      <p className="text-2xl font-bold text-gray-900">{microActions.length}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Actions</CardTitle>
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{microActions.length}</div>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <CheckCircle2 className="h-8 w-8 text-green-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Completed</p>
+                      <p className="text-2xl font-bold text-gray-900">{completedActions.length}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <Zap className="h-8 w-8 text-yellow-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Pending</p>
+                      <p className="text-2xl font-bold text-gray-900">{pendingActions.length}</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
 
-            {loading ? (
-              <div className="text-center py-8">Loading micro actions...</div>
+            {microActions.length === 0 ? (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No micro actions yet</h3>
+                  <p className="text-gray-600 mb-6">Start with small actions to build lasting habits</p>
+                  <Button onClick={() => setMicroActionModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Micro Action
+                  </Button>
+                </CardContent>
+              </Card>
             ) : (
               <div className="space-y-6">
-                {/* Active Micro Actions */}
-                <div>
-                  <h2 className="text-xl font-semibold mb-4">Active Micro Actions</h2>
-                  {activeActions.length === 0 ? (
-                    <Card>
-                      <CardContent className="text-center py-8">
-                        <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500">No active micro actions</p>
-                        <Button className="mt-4">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Create your first micro action
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="grid gap-4">
-                      {activeActions.map((action) => (
-                        <Card key={action.id}>
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
+                {/* Pending Actions */}
+                {pendingActions.length > 0 && (
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Pending Actions</h2>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {pendingActions.map((action) => (
+                        <Card key={action.id} className="hover:shadow-lg transition-shadow">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <h3 className="font-semibold">{action.title}</h3>
-                                  <Badge className={getCategoryColor(action.category)}>{action.category}</Badge>
-                                </div>
-                                {action.description && <p className="text-gray-600 text-sm">{action.description}</p>}
+                                <CardTitle className="text-lg font-semibold text-gray-900 mb-1">
+                                  {action.title}
+                                </CardTitle>
+                                {action.description && (
+                                  <CardDescription className="text-sm text-gray-600">
+                                    {action.description}
+                                  </CardDescription>
+                                )}
                               </div>
-                              <div className="flex items-center space-x-2">
-                                <Button size="sm" onClick={() => completeMicroAction(action.id)}>
-                                  <CheckCircle className="h-4 w-4" />
+                              <div className="flex items-center space-x-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleMicroActionComplete(action.id, action.is_completed)}
+                                  className="p-1"
+                                >
+                                  <Circle className="h-5 w-5 text-gray-400" />
                                 </Button>
-                                <Button size="sm" variant="outline" onClick={() => deleteMicroAction(action.id)}>
+                                <Button variant="ghost" size="sm" className="p-1">
+                                  <Edit className="h-4 w-4 text-gray-400" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteMicroAction(action.id)}
+                                  className="p-1 text-red-600 hover:text-red-700"
+                                >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
+                          </CardHeader>
+                          <CardContent>
+                            <Badge className={getCategoryColor(action.category)}>{action.category}</Badge>
                           </CardContent>
                         </Card>
                       ))}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
-                {/* Completed Micro Actions */}
+                {/* Completed Actions */}
                 {completedActions.length > 0 && (
                   <div>
-                    <h2 className="text-xl font-semibold mb-4">Completed Micro Actions</h2>
-                    <div className="grid gap-4">
-                      {completedActions.slice(0, 5).map((action) => (
-                        <Card key={action.id} className="opacity-75">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Completed Actions</h2>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {completedActions.map((action) => (
+                        <Card key={action.id} className="opacity-75 hover:opacity-100 transition-opacity">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <h3 className="font-semibold line-through">{action.title}</h3>
-                                  <Badge className={getCategoryColor(action.category)}>{action.category}</Badge>
-                                </div>
+                                <CardTitle className="text-lg font-semibold text-gray-900 mb-1 line-through">
+                                  {action.title}
+                                </CardTitle>
                                 {action.description && (
-                                  <p className="text-gray-600 text-sm line-through">{action.description}</p>
+                                  <CardDescription className="text-sm text-gray-600">
+                                    {action.description}
+                                  </CardDescription>
                                 )}
-                                <div className="flex items-center mt-2 text-sm text-gray-500">
-                                  <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
-                                  Completed
-                                </div>
                               </div>
-                              <Badge variant="secondary">Done</Badge>
+                              <div className="flex items-center space-x-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleMicroActionComplete(action.id, action.is_completed)}
+                                  className="p-1"
+                                >
+                                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteMicroAction(action.id)}
+                                  className="p-1 text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="flex items-center justify-between">
+                              <Badge className={getCategoryColor(action.category)}>{action.category}</Badge>
+                              {action.completed_at && (
+                                <span className="text-xs text-gray-500">
+                                  Completed {new Date(action.completed_at).toLocaleDateString()}
+                                </span>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
@@ -245,6 +338,9 @@ export function MicroActionsPageClient({ user }: MicroActionsPageClientProps) {
           </div>
         </main>
       </div>
+
+      {/* Modal */}
+      <CreateMicroActionModal open={microActionModalOpen} onOpenChange={setMicroActionModalOpen} />
     </div>
   )
 }

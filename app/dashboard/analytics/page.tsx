@@ -1,22 +1,7 @@
-"use client"
-import { AnalyticsPageClient } from "@/components/dashboard/analytics-page-client"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { createClient as createServerClient } from "@/lib/supabase/server"
-
-interface AnalyticsData {
-  totalReminders: number
-  completedReminders: number
-  totalMicroActions: number
-  completedMicroActions: number
-  currentStreak: number
-  weeklyCompletion: number
-  monthlyStats: {
-    week: string
-    completed: number
-    total: number
-  }[]
-}
+import { AnalyticsPageClient } from "@/components/dashboard/analytics-page-client"
 
 export default async function AnalyticsPage() {
   const cookieStore = cookies()
@@ -49,5 +34,3 @@ export default async function AnalyticsPage() {
 
   return <AnalyticsPageClient user={userData} />
 }
-
-// AnalyticsPageClient component should be defined in "@/components/dashboard/analytics-page-client"
