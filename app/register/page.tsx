@@ -1,42 +1,48 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Card, CardContent } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle, CheckCircle } from "lucide-react"
 import Link from "next/link"
+import { RegisterForm } from "@/components/auth/register-form"
 
-export default function RegisterPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+export default function RegisterPage({ searchParams }: { searchParams: { message: string } }) {
   const [success, setSuccess] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+    const { email, password, confirmPassword, firstName, lastName } = e.target as typeof e.target & {
+      email: { value: string }
+      password: { value: string }
+      confirmPassword: { value: string }
+      firstName: { value: string }
+      lastName: { value: string }
+    }
+
+    const setLoading = (loading: boolean) => {
+      // Implement loading state if needed
+    }
+
+    const setError = (error: string) => {
+      // Implement error state if needed
+    }
+
     setLoading(true)
     setError("")
 
-    if (password !== confirmPassword) {
+    if (password.value !== confirmPassword.value) {
       setError("Passwords do not match")
       setLoading(false)
       return
     }
 
-    if (password.length < 6) {
+    if (password.value.length < 6) {
       setError("Password must be at least 6 characters")
       setLoading(false)
       return
@@ -44,12 +50,12 @@ export default function RegisterPage() {
 
     try {
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: email.value,
+        password: password.value,
         options: {
           data: {
-            first_name: firstName,
-            last_name: lastName,
+            first_name: firstName.value,
+            last_name: lastName.value,
           },
         },
       })
@@ -88,118 +94,29 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
       <div className="w-full max-w-md">
-        <Card>
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">M</span>
-              </div>
-              <span className="text-2xl font-bold text-gray-900">MindReMinder</span>
-            </div>
-            <CardTitle className="text-2xl">Create Account</CardTitle>
-            <CardDescription>Start your journey to better habits</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    required
-                    placeholder="John"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    required
-                    placeholder="Doe"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  placeholder="john@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  placeholder="At least 6 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Create an Account</h1>
+          <p className="text-gray-600 mt-2">Start your journey with MindReMinder today.</p>
+        </div>
 
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+        {searchParams.message && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{searchParams.message}</AlertDescription>
+          </Alert>
+        )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creating Account..." : "Create Account"}
-              </Button>
-            </form>
+        <RegisterForm />
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Already have an account?{" "}
-                <Link href="/login" className="text-blue-600 hover:text-blue-500 font-medium">
-                  Sign in
-                </Link>
-              </p>
-            </div>
-            <div className="mt-4 text-center">
-              <Link href="/">
-                <Button variant="ghost" size="sm">
-                  ← Back to homepage
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Already have an account?{" "}
+          <Link href="/login" className="font-medium text-blue-600 hover:underline">
+            Sign in
+          </Link>
+        </p>
       </div>
     </div>
   )

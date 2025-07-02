@@ -1,9 +1,11 @@
-import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
+import { createServerClient } from "@supabase/ssr"
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
   })
 
   const supabase = createServerClient(
@@ -11,42 +13,51 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
+        get(name: string) {
+          return request.cookies.get(name)?.value
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
+        set(name: string, value: string, options) {
+          request.cookies.set({ name, value, ...options })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
           })
-          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
+          response.cookies.set({ name, value, ...options })
+        },
+        remove(name: string, options) {
+          request.cookies.set({ name, value: "", ...options })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({ name, value: "", ...options })
         },
       },
     },
   )
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/register") &&
-    !request.nextUrl.pathname.startsWith("/auth") &&
-    request.nextUrl.pathname !== "/" &&
-    !request.nextUrl.pathname.startsWith("/contact") &&
-    !request.nextUrl.pathname.startsWith("/privacy") &&
-    !request.nextUrl.pathname.startsWith("/terms") &&
-    !request.nextUrl.pathname.startsWith("/help") &&
-    !request.nextUrl.pathname.startsWith("/resources")
-  ) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/login"
-    return NextResponse.redirect(url)
+  const { pathname } = request.nextUrl
+
+  const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/register")
+  const isProtectedRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/settings")
+
+  // If user is not logged in and trying to access a protected route, redirect to login
+  if (!session && isProtectedRoute) {
+    return NextResponse.redirect(new URL("/login", request.url))
   }
 
-  return supabaseResponse
+  // If user is logged in and trying to access login/register, redirect to dashboard
+  if (session && isAuthRoute) {
+    return NextResponse.redirect(new URL("/dashboard", request.url))
+  }
+
+  return response
 }
 
 export const config = {

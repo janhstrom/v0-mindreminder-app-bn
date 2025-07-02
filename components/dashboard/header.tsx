@@ -1,108 +1,120 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Menu, Settings, LogOut } from "lucide-react"
+import { Fragment } from "react"
+import { Menu, Transition } from "@headlessui/react"
+import { Bars3Icon, BellIcon } from "@heroicons/react/24/outline"
+import { ChevronDownIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid"
+import { signOut } from "@/lib/auth/actions"
+import { cn } from "@/lib/utils"
 import Link from "next/link"
 
-interface HeaderProps {
-  user: {
-    id: string
-    email: string
-    firstName: string
-    lastName: string
-    profileImage: string | null
-    createdAt: string
-    emailConfirmed: boolean
-  }
-  onLogout: () => void
+interface User {
+  email: string
+  firstName: string
+  lastName: string
+  profileImage: string | null
 }
 
-export function Header({ user, onLogout }: HeaderProps) {
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
+interface HeaderProps {
+  user: User
+  setSidebarOpen: (open: boolean) => void
+}
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true)
-    try {
-      await onLogout()
-    } catch (error) {
-      console.error("Logout error:", error)
-      setIsLoggingOut(false)
-    }
-  }
-
-  const getInitials = () => {
-    const first = user.firstName || user.email.charAt(0)
-    const last = user.lastName || ""
-    return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase()
-  }
-
-  const getDisplayName = () => {
-    if (user.firstName || user.lastName) {
-      return `${user.firstName} ${user.lastName}`.trim()
-    }
-    return user.email
-  }
+export function Header({ user, setSidebarOpen }: HeaderProps) {
+  const userNavigation = [
+    { name: "Your profile", href: "/settings" },
+    { name: "Sign out", href: "#", onClick: () => signOut() },
+  ]
 
   return (
     <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-      <button type="button" className="-m-2.5 p-2.5 text-gray-700 lg:hidden">
+      <button type="button" className="-m-2.5 p-2.5 text-gray-700 lg:hidden" onClick={() => setSidebarOpen(true)}>
         <span className="sr-only">Open sidebar</span>
-        <Menu className="h-6 w-6" aria-hidden="true" />
+        <Bars3Icon className="h-6 w-6" aria-hidden="true" />
       </button>
 
       {/* Separator */}
-      <div className="h-6 w-px bg-gray-200 lg:hidden" aria-hidden="true" />
+      <div className="h-6 w-px bg-gray-900/10 lg:hidden" aria-hidden="true" />
 
       <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-        <div className="flex flex-1"></div>
+        <form className="relative flex flex-1" action="#" method="GET">
+          <label htmlFor="search-field" className="sr-only">
+            Search
+          </label>
+          <MagnifyingGlassIcon
+            className="pointer-events-none absolute inset-y-0 left-0 h-full w-5 text-gray-400"
+            aria-hidden="true"
+          />
+          <input
+            id="search-field"
+            className="block h-full w-full border-0 py-0 pl-8 pr-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
+            placeholder="Search..."
+            type="search"
+            name="search"
+          />
+        </form>
         <div className="flex items-center gap-x-4 lg:gap-x-6">
+          <button type="button" className="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500">
+            <span className="sr-only">View notifications</span>
+            <BellIcon className="h-6 w-6" aria-hidden="true" />
+          </button>
+
+          {/* Separator */}
+          <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-900/10" aria-hidden="true" />
+
           {/* Profile dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.profileImage || undefined} alt={getDisplayName()} />
-                  <AvatarFallback>{getInitials()}</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{getDisplayName()}</p>
-                  <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/settings" className="cursor-pointer">
-                  <Menu className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings" className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut} className="cursor-pointer">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>{isLoggingOut ? "Signing out..." : "Sign out"}</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Menu as="div" className="relative">
+            <Menu.Button className="-m-1.5 flex items-center p-1.5">
+              <span className="sr-only">Open user menu</span>
+              <img
+                className="h-8 w-8 rounded-full bg-gray-50"
+                src={user.profileImage || "/placeholder-user.jpg"}
+                alt=""
+              />
+              <span className="hidden lg:flex lg:items-center">
+                <span className="ml-4 text-sm font-semibold leading-6 text-gray-900" aria-hidden="true">
+                  {user.firstName || user.email}
+                </span>
+                <ChevronDownIcon className="ml-2 h-5 w-5 text-gray-400" aria-hidden="true" />
+              </span>
+            </Menu.Button>
+            <Transition
+              as={Fragment}
+              enter="transition ease-out duration-100"
+              enterFrom="transform opacity-0 scale-95"
+              enterTo="transform opacity-100 scale-100"
+              leave="transition ease-in duration-75"
+              leaveFrom="transform opacity-100 scale-100"
+              leaveTo="transform opacity-0 scale-95"
+            >
+              <Menu.Items className="absolute right-0 z-10 mt-2.5 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
+                {userNavigation.map((item) => (
+                  <Menu.Item key={item.name}>
+                    {({ active }) =>
+                      item.onClick ? (
+                        <button
+                          onClick={item.onClick}
+                          className={cn(
+                            active ? "bg-gray-50" : "",
+                            "block px-3 py-1 text-sm leading-6 text-gray-900 w-full text-left",
+                          )}
+                        >
+                          {item.name}
+                        </button>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className={cn(active ? "bg-gray-50" : "", "block px-3 py-1 text-sm leading-6 text-gray-900")}
+                        >
+                          {item.name}
+                        </Link>
+                      )
+                    }
+                  </Menu.Item>
+                ))}
+              </Menu.Items>
+            </Transition>
+          </Menu>
         </div>
       </div>
     </div>
