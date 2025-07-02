@@ -1,15 +1,26 @@
 "use client"
-
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Bell, Calendar, Clock, CheckCircle2, Circle, Edit, Trash2 } from "lucide-react"
 import { Header } from "@/components/dashboard/header"
 import { Sidebar } from "@/components/dashboard/sidebar"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Bell, Calendar, Circle, CheckCircle2, Edit, Plus, Trash2 } from "lucide-react"
 import { CreateReminderModal } from "@/components/reminders/create-reminder-modal"
+
+interface Props {
+  user: {
+    id: string
+    email: string
+    firstName: string
+    lastName: string
+    profileImage: string | null
+    createdAt: string
+    emailConfirmed: boolean
+  }
+}
 
 interface Reminder {
   id: string
@@ -22,128 +33,52 @@ interface Reminder {
   created_at: string
 }
 
-interface RemindersPageClientProps {
-  user: {
-    id: string
-    email: string
-    firstName: string
-    lastName: string
-    profileImage: string | null
-    createdAt: string
-    emailConfirmed: boolean
-  }
-}
-
-export function RemindersPageClient({ user }: RemindersPageClientProps) {
-  const [reminders, setReminders] = useState<Reminder[]>([])
-  const [loading, setLoading] = useState(true)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [reminderModalOpen, setReminderModalOpen] = useState(false)
-  const router = useRouter()
+export function RemindersPageClient({ user }: Props) {
   const supabase = createClient()
+  const router = useRouter()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [reminders, setReminders] = useState<Reminder[]>([])
 
   useEffect(() => {
-    const fetchReminders = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("reminders")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("reminder_time", { ascending: true })
-
-        if (error) {
-          console.error("Error fetching reminders:", error)
-          return
-        }
-
-        setReminders(data || [])
-      } catch (error) {
-        console.error("Failed to fetch reminders:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchReminders()
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT" || !session) {
-        router.push("/login")
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [router, supabase.auth, user.id])
-
-  const toggleReminderComplete = async (reminderId: string, isCompleted: boolean) => {
-    try {
-      const { error } = await supabase.from("reminders").update({ is_completed: !isCompleted }).eq("id", reminderId)
-
-      if (error) {
-        console.error("Error updating reminder:", error)
-        return
-      }
-
-      // Refresh reminders
-      await fetchReminders()
-    } catch (error) {
-      console.error("Failed to update reminder:", error)
-    }
-  }
-
-  const deleteReminder = async (reminderId: string) => {
-    try {
-      const { error } = await supabase.from("reminders").delete().eq("id", reminderId)
-
-      if (error) {
-        console.error("Error deleting reminder:", error)
-        return
-      }
-
-      // Refresh reminders
-      await fetchReminders()
-    } catch (error) {
-      console.error("Failed to delete reminder:", error)
-    }
-  }
-
-  const fetchReminders = async () => {
-    try {
+    const load = async () => {
       const { data, error } = await supabase
         .from("reminders")
         .select("*")
         .eq("user_id", user.id)
         .order("reminder_time", { ascending: true })
-
-      if (error) {
-        console.error("Error fetching reminders:", error)
-        return
-      }
-
-      setReminders(data || [])
-    } catch (error) {
-      console.error("Failed to fetch reminders:", error)
+      if (error) console.error(error)
+      setReminders(data ?? [])
+      setLoading(false)
     }
+    load()
+  }, [supabase, user.id])
+
+  const refresh = () =>
+    supabase
+      .from("reminders")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("reminder_time", { ascending: true })
+      .then(({ data }) => setReminders(data ?? []))
+
+  const toggleComplete = async (id: string, done: boolean) => {
+    await supabase.from("reminders").update({ is_completed: !done }).eq("id", id)
+    refresh()
   }
 
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleString()
+  const del = async (id: string) => {
+    await supabase.from("reminders").delete().eq("id", id)
+    refresh()
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    )
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   }
 
-  const activeReminders = reminders.filter((r) => !r.is_completed)
-  const completedReminders = reminders.filter((r) => r.is_completed)
+  const active = reminders.filter((r) => !r.is_completed)
+  const completed = reminders.filter((r) => r.is_completed)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -153,224 +88,92 @@ export function RemindersPageClient({ user }: RemindersPageClientProps) {
 
         <main className="py-10">
           <div className="px-4 sm:px-6 lg:px-8">
-            {/* Header */}
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Reminders</h1>
-                <p className="text-gray-600 mt-2">Manage your personal reminders and stay organized</p>
+                <h1 className="text-3xl font-bold">Reminders</h1>
+                <p className="text-gray-600">Stay organized and mindful</p>
               </div>
-              <Button onClick={() => setReminderModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={() => setModalOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Reminder
               </Button>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
+            {active.length === 0 && completed.length === 0 ? (
               <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <Bell className="h-8 w-8 text-blue-600" />
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">Total Reminders</dt>
-                        <dd className="text-lg font-medium text-gray-900">{reminders.length}</dd>
-                      </dl>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <Clock className="h-8 w-8 text-yellow-600" />
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">Active</dt>
-                        <dd className="text-lg font-medium text-gray-900">{activeReminders.length}</dd>
-                      </dl>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <CheckCircle2 className="h-8 w-8 text-green-600" />
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">Completed</dt>
-                        <dd className="text-lg font-medium text-gray-900">{completedReminders.length}</dd>
-                      </dl>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {reminders.length === 0 ? (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No reminders yet</h3>
-                  <p className="text-gray-600 mb-6">Create your first reminder to get started</p>
-                  <Button onClick={() => setReminderModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+                <CardContent className="py-12 text-center space-y-4">
+                  <Bell className="mx-auto h-10 w-10 text-gray-400" />
+                  <p>No reminders yet</p>
+                  <Button onClick={() => setModalOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create Reminder
                   </Button>
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-8">
-                {/* Active Reminders */}
-                {activeReminders.length > 0 && (
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Active Reminders</h2>
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {activeReminders.map((reminder) => (
-                        <Card key={reminder.id} className="hover:shadow-lg transition-shadow">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <CardTitle className="text-lg font-semibold text-gray-900 mb-1">
-                                  {reminder.title}
-                                </CardTitle>
-                                {reminder.description && (
-                                  <CardDescription className="text-sm text-gray-600">
-                                    {reminder.description}
-                                  </CardDescription>
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => toggleReminderComplete(reminder.id, reminder.is_completed)}
-                                  className="p-1"
-                                >
-                                  <Circle className="h-5 w-5 text-gray-400" />
-                                </Button>
-                                <Button variant="ghost" size="sm" className="p-1">
-                                  <Edit className="h-4 w-4 text-gray-400" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => deleteReminder(reminder.id)}
-                                  className="p-1 text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
+              <>
+                {active.length > 0 && (
+                  <>
+                    <h2 className="font-semibold mb-2">Active</h2>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {active.map((r) => (
+                        <Card key={r.id}>
+                          <CardHeader className="pb-2">
+                            <CardTitle>{r.title}</CardTitle>
+                            {r.description && <CardDescription>{r.description}</CardDescription>}
                           </CardHeader>
-                          <CardContent>
-                            <div className="space-y-3">
-                              <div className="flex items-center text-sm text-gray-600">
-                                <Calendar className="h-4 w-4 mr-2" />
-                                {formatDateTime(reminder.reminder_time)}
-                              </div>
-
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                  {reminder.is_recurring && (
-                                    <Badge variant="secondary" className="text-xs">
-                                      <Clock className="h-3 w-3 mr-1" />
-                                      Recurring
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
+                          <CardContent className="space-y-2">
+                            <div className="flex items-center text-sm text-gray-600">
+                              <Calendar className="h-4 w-4 mr-2" />
+                              {new Date(r.reminder_time).toLocaleString()}
+                            </div>
+                            <div className="flex gap-2">
+                              <Button size="icon" variant="ghost" onClick={() => toggleComplete(r.id, r.is_completed)}>
+                                <Circle className="h-4 w-4" />
+                              </Button>
+                              <Button size="icon" variant="ghost">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button size="icon" variant="ghost" onClick={() => del(r.id)}>
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
                             </div>
                           </CardContent>
                         </Card>
                       ))}
                     </div>
-                  </div>
+                  </>
                 )}
 
-                {/* Completed Reminders */}
-                {completedReminders.length > 0 && (
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Completed Reminders</h2>
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {completedReminders.map((reminder) => (
-                        <Card key={reminder.id} className="opacity-75 hover:opacity-100 transition-opacity">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <CardTitle className="text-lg font-semibold text-gray-900 mb-1 line-through">
-                                  {reminder.title}
-                                </CardTitle>
-                                {reminder.description && (
-                                  <CardDescription className="text-sm text-gray-600">
-                                    {reminder.description}
-                                  </CardDescription>
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => toggleReminderComplete(reminder.id, reminder.is_completed)}
-                                  className="p-1"
-                                >
-                                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => deleteReminder(reminder.id)}
-                                  className="p-1 text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
+                {completed.length > 0 && (
+                  <>
+                    <h2 className="font-semibold mt-10 mb-2">Completed</h2>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {completed.map((r) => (
+                        <Card key={r.id} className="opacity-75">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="line-through">{r.title}</CardTitle>
                           </CardHeader>
-                          <CardContent>
-                            <div className="space-y-3">
-                              <div className="flex items-center text-sm text-gray-600">
-                                <Calendar className="h-4 w-4 mr-2" />
-                                {formatDateTime(reminder.reminder_time)}
-                              </div>
-
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                  {reminder.is_recurring && (
-                                    <Badge variant="secondary" className="text-xs">
-                                      <Clock className="h-3 w-3 mr-1" />
-                                      Recurring
-                                    </Badge>
-                                  )}
-                                  <Badge variant="default" className="text-xs bg-green-100 text-green-800">
-                                    Completed
-                                  </Badge>
-                                </div>
-                              </div>
-                            </div>
+                          <CardContent className="flex items-center justify-between">
+                            <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+                              <CheckCircle2 className="h-3 w-3" /> done
+                            </Badge>
+                            <Button size="icon" variant="ghost" onClick={() => del(r.id)}>
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
                           </CardContent>
                         </Card>
                       ))}
                     </div>
-                  </div>
+                  </>
                 )}
-              </div>
+              </>
             )}
           </div>
         </main>
       </div>
 
-      {/* Modal */}
-      <CreateReminderModal open={reminderModalOpen} onOpenChange={setReminderModalOpen} />
+      <CreateReminderModal open={modalOpen} onOpenChange={setModalOpen} />
     </div>
   )
 }
