@@ -1,61 +1,65 @@
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Brain, Clock, Users, Zap, Star, CheckCircle, ArrowRight, Sparkles } from "lucide-react"
+import { Brain, Heart, Users, Zap, Clock, Target, Star, ArrowRight } from "lucide-react"
+import Link from "next/link"
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Brain className="h-8 w-8 text-purple-600" />
+            <Brain className="h-8 w-8 text-blue-600" />
             <span className="text-2xl font-bold text-gray-900">MindReMinder</span>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="#features" className="text-gray-600 hover:text-purple-600 transition-colors">
+            <Link href="#features" className="text-gray-600 hover:text-blue-600 transition-colors">
               Features
             </Link>
-            <Link href="#how-it-works" className="text-gray-600 hover:text-purple-600 transition-colors">
+            <Link href="#how-it-works" className="text-gray-600 hover:text-blue-600 transition-colors">
               How It Works
             </Link>
-            <Link href="/login" className="text-gray-600 hover:text-purple-600 transition-colors">
-              Sign In
+            <Link href="#pricing" className="text-gray-600 hover:text-blue-600 transition-colors">
+              Pricing
             </Link>
+          </nav>
+          <div className="flex items-center space-x-3">
+            <Button variant="ghost" asChild>
+              <Link href="/login">Sign In</Link>
+            </Button>
             <Button asChild>
               <Link href="/register">Get Started</Link>
             </Button>
-          </nav>
+          </div>
         </div>
       </header>
 
       {/* Hero Section */}
       <section className="py-20 px-4">
-        <div className="container mx-auto text-center">
-          <Badge variant="secondary" className="mb-4">
-            <Sparkles className="h-4 w-4 mr-1" />
-            Your Personal Mindfulness Companion
-          </Badge>
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            Stay <span className="text-purple-600">Mindful</span>,
-            <br />
-            Stay <span className="text-blue-600">Organized</span>
+        <div className="container mx-auto text-center max-w-4xl">
+          <Badge className="mb-4 bg-blue-100 text-blue-800 hover:bg-blue-200">✨ Transform Your Daily Routine</Badge>
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            Your Personal
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+              {" "}
+              Wellness{" "}
+            </span>
+            Companion
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Transform your daily routine with personalized reminders, micro-actions, and inspiring quotes. Build better
-            habits, one mindful moment at a time.
+          <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+            Transform your daily routine with personalized reminders, micro-actions, and mindfulness practices. Build
+            lasting habits that nurture your mind, body, and spirit.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" asChild className="text-lg px-8 py-6">
+            <Button size="lg" className="text-lg px-8 py-3" asChild>
               <Link href="/register">
-                Start Your Journey
-                <ArrowRight className="ml-2 h-5 w-5" />
+                Start Your Journey <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="text-lg px-8 py-6 bg-transparent">
-              <Link href="/login">Sign In</Link>
+            <Button size="lg" variant="outline" className="text-lg px-8 py-3 bg-transparent" asChild>
+              <Link href="#demo">Watch Demo</Link>
             </Button>
           </div>
         </div>
@@ -65,157 +69,79 @@ export default function HomePage() {
       <section id="features" className="py-20 px-4 bg-white">
         <div className="container mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Everything You Need for Mindful Living</h2>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Everything You Need for Wellness</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Discover powerful features designed to help you stay present, organized, and motivated.
+              Comprehensive tools designed to support your mental health and personal growth journey.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="border-2 hover:border-purple-200 transition-colors">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
-                <Clock className="h-12 w-12 text-purple-600 mb-4" />
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <Clock className="h-6 w-6 text-blue-600" />
+                </div>
                 <CardTitle>Smart Reminders</CardTitle>
                 <CardDescription>
-                  Set personalized reminders for meditation, breaks, gratitude practice, and more.
+                  Personalized notifications that adapt to your schedule and preferences
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Custom scheduling
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Gentle notifications
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Progress tracking
-                  </li>
-                </ul>
-              </CardContent>
             </Card>
 
-            <Card className="border-2 hover:border-blue-200 transition-colors">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
-                <Zap className="h-12 w-12 text-blue-600 mb-4" />
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                  <Zap className="h-6 w-6 text-green-600" />
+                </div>
                 <CardTitle>Micro-Actions</CardTitle>
-                <CardDescription>Small, achievable actions that build into powerful habits over time.</CardDescription>
+                <CardDescription>
+                  Small, achievable steps that create lasting positive changes in your life
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Quick wins
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Habit stacking
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Daily momentum
-                  </li>
-                </ul>
-              </CardContent>
             </Card>
 
-            <Card className="border-2 hover:border-green-200 transition-colors">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
-                <Star className="h-12 w-12 text-green-600 mb-4" />
-                <CardTitle>Daily Inspiration</CardTitle>
-                <CardDescription>Curated quotes and affirmations to keep you motivated and centered.</CardDescription>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                  <Heart className="h-6 w-6 text-purple-600" />
+                </div>
+                <CardTitle>Mindfulness Practices</CardTitle>
+                <CardDescription>Guided meditation, breathing exercises, and mindfulness techniques</CardDescription>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Personalized quotes
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Mood-based content
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Save favorites
-                  </li>
-                </ul>
-              </CardContent>
             </Card>
 
-            <Card className="border-2 hover:border-orange-200 transition-colors">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
-                <Users className="h-12 w-12 text-orange-600 mb-4" />
+                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                  <Target className="h-6 w-6 text-orange-600" />
+                </div>
+                <CardTitle>Goal Tracking</CardTitle>
+                <CardDescription>
+                  Visual progress tracking and achievement celebrations to keep you motivated
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6 text-pink-600" />
+                </div>
                 <CardTitle>Community Support</CardTitle>
-                <CardDescription>Connect with like-minded individuals on their mindfulness journey.</CardDescription>
+                <CardDescription>Connect with like-minded individuals on similar wellness journeys</CardDescription>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Share progress
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Accountability partners
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Group challenges
-                  </li>
-                </ul>
-              </CardContent>
             </Card>
 
-            <Card className="border-2 hover:border-pink-200 transition-colors">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
-                <Brain className="h-12 w-12 text-pink-600 mb-4" />
-                <CardTitle>Analytics & Insights</CardTitle>
-                <CardDescription>Track your progress and gain insights into your mindfulness patterns.</CardDescription>
+                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+                  <Star className="h-6 w-6 text-indigo-600" />
+                </div>
+                <CardTitle>Daily Inspiration</CardTitle>
+                <CardDescription>
+                  Curated quotes, affirmations, and motivational content to brighten your day
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Progress charts
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Streak tracking
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Personal insights
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 hover:border-indigo-200 transition-colors">
-              <CardHeader>
-                <Sparkles className="h-12 w-12 text-indigo-600 mb-4" />
-                <CardTitle>Personalization</CardTitle>
-                <CardDescription>Customize your experience to match your unique mindfulness goals.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Custom themes
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Flexible scheduling
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Goal setting
-                  </li>
-                </ul>
-              </CardContent>
             </Card>
           </div>
         </div>
@@ -225,55 +151,68 @@ export default function HomePage() {
       <section id="how-it-works" className="py-20 px-4 bg-gray-50">
         <div className="container mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Simple Steps to Mindful Living</h2>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">How MindReMinder Works</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Get started with MindReMinder in just a few easy steps.
+              Simple steps to transform your daily routine and build lasting wellness habits.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-purple-600">1</span>
+              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-white">1</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Sign Up & Set Goals</h3>
+              <h3 className="text-xl font-semibold mb-4">Set Your Intentions</h3>
               <p className="text-gray-600">
-                Create your account and tell us about your mindfulness goals and preferences.
+                Define your wellness goals and preferences. Our AI learns your patterns and creates a personalized plan.
               </p>
             </div>
 
             <div className="text-center">
-              <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-blue-600">2</span>
+              <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-white">2</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Create Your Routine</h3>
-              <p className="text-gray-600">Set up personalized reminders and micro-actions that fit your lifestyle.</p>
+              <h3 className="text-xl font-semibold mb-4">Receive Smart Reminders</h3>
+              <p className="text-gray-600">
+                Get timely, contextual reminders for micro-actions, mindfulness breaks, and self-care activities.
+              </p>
             </div>
 
             <div className="text-center">
-              <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-green-600">3</span>
+              <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-white">3</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Track & Grow</h3>
-              <p className="text-gray-600">Follow your progress, celebrate wins, and build lasting mindful habits.</p>
+              <h3 className="text-xl font-semibold mb-4">Track Your Progress</h3>
+              <p className="text-gray-600">
+                Monitor your journey with beautiful visualizations and celebrate your achievements along the way.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+      <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="container mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-4">Ready to Transform Your Daily Routine?</h2>
-          <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-            Join thousands of users who have already started their mindfulness journey with MindReMinder.
+          <h2 className="text-4xl font-bold text-white mb-6">Ready to Transform Your Wellness Journey?</h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            Join thousands of users who have already started their path to better mental health and personal growth.
           </p>
-          <Button size="lg" variant="secondary" asChild className="text-lg px-8 py-6">
-            <Link href="/register">
-              Start Free Today
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3" asChild>
+              <Link href="/register">
+                Start Free Today <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-white text-white hover:bg-white hover:text-blue-600 text-lg px-8 py-3 bg-transparent"
+              asChild
+            >
+              <Link href="/contact">Contact Us</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -283,14 +222,14 @@ export default function HomePage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Brain className="h-6 w-6 text-purple-400" />
+                <Brain className="h-6 w-6 text-blue-400" />
                 <span className="text-xl font-bold">MindReMinder</span>
               </div>
-              <p className="text-gray-400">Your personal companion for mindful living and better habits.</p>
+              <p className="text-gray-400">Your personal wellness companion for a healthier, happier life.</p>
             </div>
 
             <div>
-              <h3 className="font-semibold mb-4">Product</h3>
+              <h4 className="font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-gray-400">
                 <li>
                   <Link href="#features" className="hover:text-white transition-colors">
@@ -298,8 +237,8 @@ export default function HomePage() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/dashboard" className="hover:text-white transition-colors">
-                    Dashboard
+                  <Link href="#pricing" className="hover:text-white transition-colors">
+                    Pricing
                   </Link>
                 </li>
                 <li>
@@ -311,16 +250,11 @@ export default function HomePage() {
             </div>
 
             <div>
-              <h3 className="font-semibold mb-4">Company</h3>
+              <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <Link href="/privacy" className="hover:text-white transition-colors">
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/terms" className="hover:text-white transition-colors">
-                    Terms of Service
+                  <Link href="/about" className="hover:text-white transition-colors">
+                    About
                   </Link>
                 </li>
                 <li>
@@ -328,25 +262,35 @@ export default function HomePage() {
                     Contact
                   </Link>
                 </li>
+                <li>
+                  <Link href="/privacy" className="hover:text-white transition-colors">
+                    Privacy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/terms" className="hover:text-white transition-colors">
+                    Terms
+                  </Link>
+                </li>
               </ul>
             </div>
 
             <div>
-              <h3 className="font-semibold mb-4">Resources</h3>
+              <h4 className="font-semibold mb-4">Resources</h4>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <Link href="/resources" className="hover:text-white transition-colors">
-                    Mindfulness Guide
+                  <Link href="/blog" className="hover:text-white transition-colors">
+                    Blog
                   </Link>
                 </li>
                 <li>
                   <Link href="/resources" className="hover:text-white transition-colors">
-                    Habit Building
+                    Wellness Resources
                   </Link>
                 </li>
                 <li>
-                  <Link href="/resources" className="hover:text-white transition-colors">
-                    Wellness Tips
+                  <Link href="/community" className="hover:text-white transition-colors">
+                    Community
                   </Link>
                 </li>
               </ul>
