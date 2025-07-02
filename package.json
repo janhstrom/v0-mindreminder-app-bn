@@ -1,5 +1,5 @@
 {
-  "name": "my-v0-project",
+  "name": "mindreminder-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "latest",
-    "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",
     "@radix-ui/react-aspect-ratio": "latest",
@@ -41,11 +40,9 @@
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
     "ai": "latest",
-    "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "latest",
-    "date-fns": "4.1.0",
     "dotenv": "latest",
     "embla-carousel-react": "latest",
     "fs": "latest",
@@ -59,17 +56,17 @@
     "react-dom": "^18",
     "react-hook-form": "latest",
     "react-resizable-panels": "latest",
-    "recharts": "2.15.0",
     "sonner": "latest",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "latest",
-    "zod": "^3.24.1"
+    "zod": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.21",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"

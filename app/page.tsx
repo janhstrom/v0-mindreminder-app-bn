@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { Brain, Heart, Target, Users, Zap, ArrowRight } from "lucide-react"
+import { Brain, Clock, Target, Users, Zap, Star } from "lucide-react"
 import Link from "next/link"
 
 export default function HomePage() {
@@ -12,19 +12,13 @@ export default function HomePage() {
             <Brain className="h-8 w-8 text-blue-600" />
             <span className="text-2xl font-bold text-gray-900">MindReMinder</span>
           </div>
-          <div className="hidden md:flex items-center space-x-6">
-            <Link href="#features" className="text-gray-600 hover:text-gray-900">
-              Features
+          <div className="flex items-center space-x-4">
+            <Link href="/login">
+              <Button variant="ghost">Sign In</Button>
             </Link>
-            <Link href="#about" className="text-gray-600 hover:text-gray-900">
-              About
+            <Link href="/register">
+              <Button>Get Started</Button>
             </Link>
-            <Button variant="outline" asChild>
-              <Link href="/login">Sign In</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/register">Get Started</Link>
-            </Button>
           </div>
         </nav>
       </header>
@@ -33,70 +27,83 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            Transform Your Daily
-            <span className="text-blue-600"> Wellness Journey</span>
+            Your Personal
+            <span className="text-blue-600"> Wellness </span>
+            Companion
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Personalized reminders, micro-actions, and motivational quotes to help you build lasting habits and achieve
-            your wellness goals.
+            Build healthy habits with personalized reminders, micro-actions, and daily inspiration. Transform your
+            mindfulness journey one small step at a time.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8 py-4" asChild>
-              <Link href="/register">
+            <Link href="/register">
+              <Button size="lg" className="text-lg px-8 py-3">
                 Start Your Journey
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-4 bg-transparent" asChild>
-              <Link href="#features">Learn More</Link>
-            </Button>
+              </Button>
+            </Link>
+            <Link href="/demo">
+              <Button variant="outline" size="lg" className="text-lg px-8 py-3 bg-transparent">
+                View Demo
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 py-20">
+      <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Everything You Need for Wellness</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Everything You Need for Mindful Living</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Our comprehensive platform combines proven wellness techniques with modern technology.
+            Discover powerful tools designed to help you build lasting habits and maintain mental wellness.
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-            <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-6">
-              <Target className="h-6 w-6 text-blue-600" />
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+              <Clock className="h-6 w-6 text-blue-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Smart Reminders</h3>
             <p className="text-gray-600">
-              Personalized reminders that adapt to your schedule and help you stay on track with your wellness goals.
+              Personalized reminders that adapt to your schedule and help you stay consistent with your mindfulness
+              practices.
             </p>
           </div>
 
           <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-            <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-6">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
               <Zap className="h-6 w-6 text-green-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Micro-Actions</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Micro Actions</h3>
             <p className="text-gray-600">
-              Small, achievable actions that compound over time to create significant positive changes in your life.
+              Small, achievable actions that compound over time to create meaningful change in your daily routine.
             </p>
           </div>
 
           <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-            <div className="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-6">
-              <Heart className="h-6 w-6 text-purple-600" />
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
+              <Star className="h-6 w-6 text-purple-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Daily Inspiration</h3>
             <p className="text-gray-600">
-              Curated motivational quotes and affirmations to keep you inspired and focused on your journey.
+              Curated motivational quotes and affirmations to keep you inspired and focused on your wellness goals.
             </p>
           </div>
 
           <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-            <div className="bg-orange-100 w-12 h-12 rounded-lg flex items-center justify-center mb-6">
-              <Users className="h-6 w-6 text-orange-600" />
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-6">
+              <Target className="h-6 w-6 text-orange-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Progress Tracking</h3>
+            <p className="text-gray-600">
+              Detailed analytics and insights to help you understand your patterns and celebrate your progress.
+            </p>
+          </div>
+
+          <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-6">
+              <Users className="h-6 w-6 text-red-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Community Support</h3>
             <p className="text-gray-600">
@@ -105,53 +112,53 @@ export default function HomePage() {
           </div>
 
           <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-            <div className="bg-teal-100 w-12 h-12 rounded-lg flex items-center justify-center mb-6">
+            <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-6">
               <Brain className="h-6 w-6 text-teal-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Progress Tracking</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Mindful Goals</h3>
             <p className="text-gray-600">
-              Visualize your progress with detailed analytics and insights into your wellness journey.
-            </p>
-          </div>
-
-          <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-            <div className="bg-pink-100 w-12 h-12 rounded-lg flex items-center justify-center mb-6">
-              <Target className="h-6 w-6 text-pink-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Goal Setting</h3>
-            <p className="text-gray-600">
-              Set meaningful goals and break them down into manageable steps with our guided goal-setting tools.
+              Guided goal-setting tools that help you create realistic, achievable objectives for your wellness journey.
             </p>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="bg-blue-600 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-4">Ready to Transform Your Life?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Join thousands of users who have already started their wellness journey with MindReMinder.
+      <section className="container mx-auto px-4 py-20">
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 text-center text-white">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Transform Your Daily Routine?</h2>
+          <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+            Join thousands of users who have already started their mindfulness journey with MindReMinder.
           </p>
-          <Button size="lg" variant="secondary" className="text-lg px-8 py-4" asChild>
-            <Link href="/register">
-              Get Started Today
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
+          <Link href="/register">
+            <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
+              Start Free Today
+            </Button>
+          </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Brain className="h-6 w-6" />
-              <span className="text-xl font-bold">MindReMinder</span>
-            </div>
-            <p className="text-gray-400">© 2024 MindReMinder. All rights reserved.</p>
+      <footer className="container mx-auto px-4 py-12 border-t">
+        <div className="flex flex-col md:flex-row items-center justify-between">
+          <div className="flex items-center space-x-2 mb-4 md:mb-0">
+            <Brain className="h-6 w-6 text-blue-600" />
+            <span className="text-xl font-bold text-gray-900">MindReMinder</span>
           </div>
+          <div className="flex items-center space-x-6 text-gray-600">
+            <Link href="/privacy" className="hover:text-gray-900">
+              Privacy
+            </Link>
+            <Link href="/terms" className="hover:text-gray-900">
+              Terms
+            </Link>
+            <Link href="/contact" className="hover:text-gray-900">
+              Contact
+            </Link>
+          </div>
+        </div>
+        <div className="text-center text-gray-500 mt-8">
+          <p>&copy; 2024 MindReMinder. All rights reserved.</p>
         </div>
       </footer>
     </div>

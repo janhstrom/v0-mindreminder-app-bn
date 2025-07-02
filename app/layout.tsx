@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "MindReMinder - Your Personal Wellness Companion",
-  description: "Transform your daily routine with personalized reminders, micro-actions, and motivational quotes.",
+  description: "Build healthy habits with personalized reminders, micro-actions, and daily inspiration.",
     generator: 'v0.dev'
 }
 
