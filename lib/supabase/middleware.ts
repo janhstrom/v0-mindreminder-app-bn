@@ -1,24 +1,45 @@
+import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
-import { createMiddlewareClient } from "@supabase/ssr"
 
-/**
- * Keeps the Supabase session in sync (refreshes cookies when they expire).
- * Call this from your root `middleware.ts`.
- */
 export async function updateSession(request: NextRequest) {
-  /* The response we’ll send back (can be changed later in `middleware.ts`). */
-  const response = NextResponse.next()
-
-  /* A tiny, stateless Supabase client that lives only for this request. */
-  const supabase = createMiddlewareClient({
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    supabaseKey: process.env.SUPABASE_ANON_KEY!,
-    req: request,
-    res: response,
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
   })
 
-  /* Trigger a “silent refresh” if the JWT cookie is expired. */
-  await supabase.auth.getSession()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({ name, value, ...options })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({ name, value, ...options })
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({ name, value: "", ...options })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({ name, value: "", ...options })
+        },
+      },
+    },
+  )
+
+  // refreshing the session before loading server components
+  await supabase.auth.getUser()
 
   return response
 }

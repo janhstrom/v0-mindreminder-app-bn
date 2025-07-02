@@ -1,38 +1,45 @@
-import { RegisterForm } from "@/components/auth/register-form"
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { signUp } from "@/lib/auth/actions"
 
-export default async function RegisterPage({ searchParams }: { searchParams: { message: string } }) {
-  const supabase = createClient()
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  if (session) {
-    redirect("/dashboard")
-  }
-
+export default function RegisterPage({ searchParams }: { searchParams: { message: string } }) {
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md space-y-4">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold">Create an Account</h1>
-          <p className="text-gray-500">Join MindReMinder and start your journey.</p>
-        </div>
-        {searchParams.message && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <span className="block sm:inline">{searchParams.message}</span>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+      <Card className="mx-auto max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-xl">Sign Up</CardTitle>
+          <CardDescription>Enter your information to create an account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" name="email" type="email" placeholder="m@example.com" required />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" name="password" type="password" required />
+            </div>
+            <Button formAction={signUp} type="submit" className="w-full">
+              Create an account
+            </Button>
+            {searchParams?.message && (
+              <p className="mt-4 p-2 bg-blue-100 text-blue-700 text-center text-sm rounded-md">
+                {searchParams.message}
+              </p>
+            )}
+          </form>
+          <div className="mt-4 text-center text-sm">
+            Already have an account?{" "}
+            <Link href="/login" className="underline">
+              Sign in
+            </Link>
           </div>
-        )}
-        <RegisterForm />
-        <p className="text-center text-sm">
-          Already have an account?{" "}
-          <Link href="/login" className="font-medium text-blue-600 hover:underline">
-            Sign in
-          </Link>
-        </p>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
