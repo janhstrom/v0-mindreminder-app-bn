@@ -16,13 +16,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { createClient } from "@/lib/supabase/client"
+
+const supabase = createClient()
 
 interface CreateReminderModalProps {
-  isOpen: boolean
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-export function CreateReminderModal({ isOpen, onClose }: CreateReminderModalProps) {
+export function CreateReminderModal({ open, onOpenChange }: CreateReminderModalProps) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [date, setDate] = useState("")
@@ -35,11 +38,22 @@ export function CreateReminderModal({ isOpen, onClose }: CreateReminderModalProp
     setIsLoading(true)
 
     try {
-      // Here you would typically save to your database
-      console.log("Creating reminder:", { title, description, date, time, frequency })
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error("No user found")
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const { error } = await supabase.from("reminders").insert({
+        user_id: user.id,
+        title,
+        description: description || null,
+        reminder_time: `${date}T${time}:00`,
+        is_recurring: frequency !== "once",
+        recurrence_pattern: frequency !== "once" ? frequency : null,
+        is_completed: false,
+      })
+
+      if (error) throw error
 
       // Reset form and close modal
       setTitle("")
@@ -47,7 +61,10 @@ export function CreateReminderModal({ isOpen, onClose }: CreateReminderModalProp
       setDate("")
       setTime("")
       setFrequency("once")
-      onClose()
+      onOpenChange(false)
+
+      // Refresh the page to show new reminder
+      window.location.reload()
     } catch (error) {
       console.error("Error creating reminder:", error)
     } finally {
@@ -56,7 +73,7 @@ export function CreateReminderModal({ isOpen, onClose }: CreateReminderModalProp
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create New Reminder</DialogTitle>
@@ -110,7 +127,7 @@ export function CreateReminderModal({ isOpen, onClose }: CreateReminderModalProp
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
