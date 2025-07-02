@@ -10,13 +10,18 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // Protect dashboard routes
-  if (req.nextUrl.pathname.startsWith("/dashboard") && !session) {
+  // If user is not signed in and the current path is not /login or /register, redirect to /login
+  if (
+    !session &&
+    !req.nextUrl.pathname.startsWith("/login") &&
+    !req.nextUrl.pathname.startsWith("/register") &&
+    req.nextUrl.pathname !== "/"
+  ) {
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
-  // Redirect authenticated users away from auth pages
-  if ((req.nextUrl.pathname === "/login" || req.nextUrl.pathname === "/register") && session) {
+  // If user is signed in and the current path is /login or /register, redirect to /dashboard
+  if (session && (req.nextUrl.pathname.startsWith("/login") || req.nextUrl.pathname.startsWith("/register"))) {
     return NextResponse.redirect(new URL("/dashboard", req.url))
   }
 
@@ -24,5 +29,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/register"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 }

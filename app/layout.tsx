@@ -7,8 +7,9 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "MindReMinder - Your Personal Wellness Companion",
-  description: "Transform your daily routine with personalized reminders, micro-actions, and mindfulness practices.",
+  title: "MindReMinder - Your Personal Mindfulness & Reminder App",
+  description:
+    "Stay mindful, organized, and motivated with personalized reminders, micro-actions, and daily inspiration.",
     generator: 'v0.dev'
 }
 
@@ -18,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
