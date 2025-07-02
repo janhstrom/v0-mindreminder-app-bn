@@ -1,31 +1,7 @@
-"use client"
-
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { createClient as createServerClient } from "@/lib/supabase/server"
 import { MicroActionsPageClient } from "@/components/dashboard/micro-actions-page-client"
-
-interface MicroAction {
-  id: string
-  title: string
-  description: string
-  category: string
-  is_completed: boolean
-  completed_at: string | null
-  created_at: string
-}
-
-interface MicroActionsPageClientProps {
-  user: {
-    id: string
-    email: string
-    firstName: string
-    lastName: string
-    profileImage: string | null
-    createdAt: string
-    emailConfirmed: boolean
-  }
-}
 
 export default async function MicroActionsPage() {
   const cookieStore = cookies()
@@ -35,9 +11,7 @@ export default async function MicroActionsPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) {
-    redirect("/login")
-  }
+  if (!user) redirect("/login")
 
   const { data: profile } = await supabase
     .from("profiles")
