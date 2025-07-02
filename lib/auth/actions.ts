@@ -51,3 +51,7 @@ export async function signOut() {
   revalidatePath("/", "layout")
   return redirect("/login")
 }
+
+// Alias exports for older imports ─ keeps backward compatibility
+export const login = signIn
+export const signup = signUp
