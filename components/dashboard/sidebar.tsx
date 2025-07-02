@@ -1,25 +1,23 @@
 "use client"
-
+import { X, Home, Bell, Target, Users, BarChart, Settings, HelpCircle } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { Home, Bell, Target, Users, BarChart3, Settings, HelpCircle, X } from "lucide-react"
+import { usePathname } from "next/navigation"
 
 interface SidebarProps {
   open: boolean
   setOpen: (open: boolean) => void
 }
 
-const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Home },
-  { name: "Reminders", href: "/dashboard/reminders", icon: Bell },
-  { name: "Micro Actions", href: "/dashboard/micro-actions", icon: Target },
-  { name: "Friends", href: "/dashboard/friends", icon: Users },
-  { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-  { name: "Settings", href: "/settings", icon: Settings },
-  { name: "Help", href: "/help", icon: HelpCircle },
+const links = [
+  { href: "/dashboard", label: "Dashboard", icon: Home },
+  { href: "/dashboard/reminders", label: "Reminders", icon: Bell },
+  { href: "/dashboard/micro-actions", label: "Micro Actions", icon: Target },
+  { href: "/dashboard/friends", label: "Friends", icon: Users },
+  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart },
+  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/help", label: "Help", icon: HelpCircle },
 ]
 
 export function Sidebar({ open, setOpen }: SidebarProps) {
@@ -27,49 +25,54 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile overlay */}
-      {open && <div className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden" onClick={() => setOpen(false)} />}
+      {/* overlay for mobile */}
+      {open && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setOpen(false)} />}
 
-      {/* Sidebar */}
-      <div
+      <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
+          "fixed inset-y-0 left-0 z-50 w-72 transform bg-white shadow-lg transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:shadow-none",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        {/* Logo section */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">M</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900">MindReMinder</span>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => setOpen(false)} className="lg:hidden">
+        {/* close btn mobile */}
+        <div className="flex items-center justify-between px-4 py-3 lg:hidden">
+          <span className="font-semibold">Menu</span>
+          <Button size="icon" variant="ghost" onClick={() => setOpen(false)}>
             <X className="h-5 w-5" />
           </Button>
         </div>
 
-        {/* Navigation */}
-        <ScrollArea className="flex-1 p-4">
-          <nav className="space-y-2">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href
-              return (
-                <Link key={item.name} href={item.href} onClick={() => setOpen(false)}>
-                  <Button
-                    variant={isActive ? "secondary" : "ghost"}
-                    className={cn("w-full justify-start", isActive && "bg-blue-50 text-blue-700 hover:bg-blue-100")}
-                  >
-                    <item.icon className="mr-3 h-4 w-4" />
-                    {item.name}
-                  </Button>
-                </Link>
-              )
-            })}
-          </nav>
-        </ScrollArea>
-      </div>
+        {/* logo */}
+        <div className="px-6 py-4 hidden lg:block">
+          <span className="text-xl font-bold">MindReMinder</span>
+        </div>
+
+        {/* nav */}
+        <nav className="space-y-1 px-2 pb-6">
+          {links.map(({ href, label, icon: Icon }) => {
+            const active = pathname === href
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100",
+                  active ? "bg-gray-100 text-gray-900" : "text-gray-600",
+                )}
+              >
+                <Icon
+                  className={cn(
+                    "mr-3 h-5 w-5 flex-shrink-0",
+                    active ? "text-primary" : "text-gray-400 group-hover:text-gray-600",
+                  )}
+                />
+                {label}
+              </Link>
+            )
+          })}
+        </nav>
+      </aside>
     </>
   )
 }
