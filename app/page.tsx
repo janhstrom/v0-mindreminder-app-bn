@@ -1,7 +1,20 @@
 import { Button } from "@/components/ui/button"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Brain, Bell, Users, Quote, Zap, Shield, Smartphone, Heart } from "lucide-react"
+import {
+  Bell,
+  Heart,
+  Users,
+  Zap,
+  Quote,
+  Calendar,
+  Shield,
+  Smartphone,
+  ArrowRight,
+  CheckCircle,
+  Star,
+  MessageCircle,
+} from "lucide-react"
 import Link from "next/link"
 
 export default function HomePage() {
@@ -11,27 +24,35 @@ export default function HomePage() {
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Brain className="h-8 w-8 text-purple-600" />
-            <span className="text-2xl font-bold text-gray-900">MindReMinder</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+              <Heart className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              MindReMinder
+            </span>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="#features" className="text-gray-600 hover:text-purple-600 transition-colors">
               Features
             </Link>
-            <Link href="#about" className="text-gray-600 hover:text-purple-600 transition-colors">
-              About
+            <Link href="#how-it-works" className="text-gray-600 hover:text-purple-600 transition-colors">
+              How It Works
             </Link>
-            <Link href="/contact" className="text-gray-600 hover:text-purple-600 transition-colors">
-              Contact
+            <Link href="#testimonials" className="text-gray-600 hover:text-purple-600 transition-colors">
+              Testimonials
             </Link>
           </nav>
           <div className="flex items-center space-x-3">
-            <Button variant="outline" asChild>
-              <Link href="/login">Sign In</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/register">Get Started</Link>
-            </Button>
+            <Link href="/login">
+              <Button variant="ghost" className="text-purple-600 hover:text-purple-700">
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+                Get Started
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
@@ -39,24 +60,53 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="py-20 px-4">
         <div className="container mx-auto text-center">
-          <Badge variant="secondary" className="mb-4">
+          <Badge className="mb-6 bg-purple-100 text-purple-700 hover:bg-purple-200">
             ✨ Your Personal Mindfulness Companion
           </Badge>
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-600 via-blue-600 to-teal-600 bg-clip-text text-transparent">
             Stay Mindful,
-            <span className="text-purple-600"> Stay Organized</span>
+            <br />
+            Stay Connected
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
-            MindReMinder helps you cultivate mindfulness, stay organized with smart reminders, and connect with friends
-            through shared inspiration and micro-actions.
+            Transform your daily routine with personalized reminders, inspirational quotes, and micro-actions designed
+            to boost your mindfulness and productivity.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8 py-3" asChild>
-              <Link href="/register">Start Your Journey</Link>
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-3 bg-transparent" asChild>
-              <Link href="/login">Sign In</Link>
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <Link href="/register">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-lg px-8 py-3"
+              >
+                Start Your Journey
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button
+                size="lg"
+                variant="outline"
+                className="text-lg px-8 py-3 border-purple-200 hover:border-purple-300 bg-transparent"
+              >
+                Sign In
+              </Button>
+            </Link>
+          </div>
+
+          {/* Hero Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600 mb-2">10K+</div>
+              <div className="text-gray-600">Active Users</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600 mb-2">1M+</div>
+              <div className="text-gray-600">Reminders Sent</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-teal-600 mb-2">99%</div>
+              <div className="text-gray-600">Satisfaction Rate</div>
+            </div>
           </div>
         </div>
       </section>
@@ -65,165 +115,328 @@ export default function HomePage() {
       <section id="features" className="py-20 px-4 bg-white">
         <div className="container mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Everything You Need for Mindful Living</h2>
+            <h2 className="text-4xl font-bold mb-4 text-gray-900">Everything You Need for a Mindful Life</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Discover powerful features designed to enhance your daily mindfulness practice and keep you connected with
-              what matters most.
+              Discover powerful features designed to help you stay organized, motivated, and connected.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
               <CardHeader>
-                <Bell className="h-12 w-12 text-purple-600 mb-4" />
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                  <Bell className="w-6 h-6 text-purple-600" />
+                </div>
                 <CardTitle className="text-xl">Smart Reminders</CardTitle>
                 <CardDescription>
-                  Set intelligent reminders that adapt to your schedule and help you stay on track with your goals and
-                  daily practices.
+                  Set personalized reminders that adapt to your schedule and preferences.
                 </CardDescription>
               </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Custom scheduling
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Location-based alerts
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Smart notifications
+                  </li>
+                </ul>
+              </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
               <CardHeader>
-                <Zap className="h-12 w-12 text-blue-600 mb-4" />
-                <CardTitle className="text-xl">Micro-Actions</CardTitle>
-                <CardDescription>
-                  Break down big goals into small, manageable actions. Build lasting habits through consistent
-                  micro-steps.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader>
-                <Quote className="h-12 w-12 text-green-600 mb-4" />
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <Quote className="w-6 h-6 text-blue-600" />
+                </div>
                 <CardTitle className="text-xl">Daily Inspiration</CardTitle>
-                <CardDescription>
-                  Discover and save meaningful quotes. Share inspiration with friends and build a personal collection of
-                  wisdom.
-                </CardDescription>
+                <CardDescription>Get personalized quotes and affirmations to start your day right.</CardDescription>
               </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Curated quotes
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Personal affirmations
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Mood-based content
+                  </li>
+                </ul>
+              </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
               <CardHeader>
-                <Users className="h-12 w-12 text-orange-600 mb-4" />
+                <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+                  <Zap className="w-6 h-6 text-teal-600" />
+                </div>
+                <CardTitle className="text-xl">Micro-Actions</CardTitle>
+                <CardDescription>Small, actionable steps that create big changes in your life.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    5-minute activities
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Progress tracking
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Habit building
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                  <Users className="w-6 h-6 text-green-600" />
+                </div>
                 <CardTitle className="text-xl">Friend Connections</CardTitle>
-                <CardDescription>
-                  Connect with friends, share reminders, and support each other on your mindfulness journeys.
-                </CardDescription>
+                <CardDescription>Share your journey and stay accountable with friends and family.</CardDescription>
               </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Shared reminders
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Group challenges
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Progress sharing
+                  </li>
+                </ul>
+              </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
               <CardHeader>
-                <Shield className="h-12 w-12 text-red-600 mb-4" />
+                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                  <Calendar className="w-6 h-6 text-orange-600" />
+                </div>
+                <CardTitle className="text-xl">Smart Scheduling</CardTitle>
+                <CardDescription>AI-powered scheduling that learns your patterns and preferences.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Adaptive timing
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Calendar integration
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    Conflict detection
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardHeader>
+                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                  <Shield className="w-6 h-6 text-red-600" />
+                </div>
                 <CardTitle className="text-xl">Privacy First</CardTitle>
                 <CardDescription>
-                  Your data is secure and private. We believe in protecting your personal information and mindfulness
-                  practice.
+                  Your data is encrypted and secure. We never share your personal information.
                 </CardDescription>
               </CardHeader>
-            </Card>
-
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader>
-                <Smartphone className="h-12 w-12 text-indigo-600 mb-4" />
-                <CardTitle className="text-xl">Cross-Platform</CardTitle>
-                <CardDescription>
-                  Access your reminders and practices anywhere. Seamlessly sync across all your devices.
-                </CardDescription>
-              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    End-to-end encryption
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    GDPR compliant
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                    No data selling
+                  </li>
+                </ul>
+              </CardContent>
             </Card>
           </div>
         </div>
       </section>
 
-      {/* About Section */}
-      <section id="about" className="py-20 px-4 bg-gradient-to-r from-purple-50 to-blue-50">
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20 px-4 bg-gradient-to-br from-purple-50 to-blue-50">
         <div className="container mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">Why Choose MindReMinder?</h2>
-              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                In our fast-paced world, it's easy to lose sight of what truly matters. MindReMinder was created to help
-                you slow down, stay present, and build meaningful connections with yourself and others.
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4 text-gray-900">How MindReMinder Works</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Get started in minutes and transform your daily routine with our simple 3-step process.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-white">1</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-4">Set Your Preferences</h3>
+              <p className="text-gray-600">
+                Tell us about your goals, schedule, and what motivates you. Our AI learns your preferences to provide
+                personalized experiences.
               </p>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <Heart className="h-6 w-6 text-purple-600 mt-1 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Mindful by Design</h3>
-                    <p className="text-gray-600">
-                      Every feature is crafted to promote mindfulness and intentional living.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <Users className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Community Focused</h3>
-                    <p className="text-gray-600">Connect with like-minded individuals on similar journeys.</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <Zap className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Simple & Effective</h3>
-                    <p className="text-gray-600">
-                      Clean, intuitive design that doesn't get in the way of your practice.
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
-            <div className="relative">
-              <div className="bg-white rounded-2xl shadow-2xl p-8">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-gray-700">Morning meditation reminder</span>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-white">2</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-4">Receive Smart Reminders</h3>
+              <p className="text-gray-600">
+                Get timely reminders, inspiring quotes, and micro-actions delivered exactly when you need them most.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-white">3</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-4">Track Your Progress</h3>
+              <p className="text-gray-600">
+                Monitor your growth, celebrate achievements, and stay motivated with detailed insights and progress
+                tracking.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section id="testimonials" className="py-20 px-4 bg-white">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4 text-gray-900">What Our Users Say</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Join thousands of users who have transformed their lives with MindReMinder.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <p className="text-gray-600 mb-4">
+                  "MindReMinder has completely changed how I approach my daily routine. The personalized reminders keep
+                  me on track, and the micro-actions are so easy to follow!"
+                </p>
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-purple-600 font-semibold">SJ</span>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <span className="text-gray-700">Gratitude practice micro-action</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                    <span className="text-gray-700">Shared inspirational quote</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                    <span className="text-gray-700">Friend connection request</span>
+                  <div>
+                    <div className="font-semibold">Sarah Johnson</div>
+                    <div className="text-sm text-gray-500">Marketing Manager</div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <p className="text-gray-600 mb-4">
+                  "The friend connection feature is amazing! My family and I share reminders and motivate each other.
+                  It's like having a personal coach in your pocket."
+                </p>
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-blue-600 font-semibold">MC</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold">Michael Chen</div>
+                    <div className="text-sm text-gray-500">Software Developer</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <p className="text-gray-600 mb-4">
+                  "I love the daily quotes and how they match my mood. The app learns what I need and delivers exactly
+                  the right message at the right time."
+                </p>
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-teal-600 font-semibold">ER</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold">Emily Rodriguez</div>
+                    <div className="text-sm text-gray-500">Teacher</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+      <section className="py-20 px-4 bg-gradient-to-r from-purple-600 to-blue-600">
         <div className="container mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6">Ready to Transform Your Daily Practice?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Join thousands of users who have already started their mindfulness journey with MindReMinder. Your future
-            self will thank you.
+          <h2 className="text-4xl font-bold text-white mb-6">Ready to Transform Your Life?</h2>
+          <p className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto">
+            Join thousands of users who have already started their mindfulness journey with MindReMinder.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="text-lg px-8 py-3" asChild>
-              <Link href="/register">Start Free Today</Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="text-lg px-8 py-3 border-white text-white hover:bg-white hover:text-purple-600 bg-transparent"
-              asChild
-            >
-              <Link href="/contact">Learn More</Link>
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link href="/register">
+              <Button size="lg" className="bg-white text-purple-600 hover:bg-gray-100 text-lg px-8 py-3">
+                Start Free Today
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white text-white hover:bg-white hover:text-purple-600 text-lg px-8 py-3 bg-transparent"
+              >
+                Sign In
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -231,52 +444,82 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12 px-4">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Brain className="h-6 w-6 text-purple-400" />
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                  <Heart className="w-5 h-5 text-white" />
+                </div>
                 <span className="text-xl font-bold">MindReMinder</span>
               </div>
-              <p className="text-gray-400">Your personal companion for mindful living and meaningful connections.</p>
+              <p className="text-gray-400 mb-4">
+                Your personal mindfulness companion for a better, more organized life.
+              </p>
+              <div className="flex space-x-4">
+                <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 cursor-pointer">
+                  <MessageCircle className="w-4 h-4" />
+                </div>
+                <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 cursor-pointer">
+                  <Smartphone className="w-4 h-4" />
+                </div>
+              </div>
             </div>
+
             <div>
-              <h3 className="font-semibold mb-4">Features</h3>
+              <h3 className="font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    Smart Reminders
+                  <Link href="#features" className="hover:text-white transition-colors">
+                    Features
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    Micro-Actions
+                  <Link href="#how-it-works" className="hover:text-white transition-colors">
+                    How It Works
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    Daily Quotes
+                  <Link href="/pricing" className="hover:text-white transition-colors">
+                    Pricing
                   </Link>
                 </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    Friend Network
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-gray-400">
                 <li>
                   <Link href="/help" className="hover:text-white transition-colors">
                     Help Center
                   </Link>
                 </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-4">Company</h3>
+              <ul className="space-y-2 text-gray-400">
                 <li>
-                  <Link href="/contact" className="hover:text-white transition-colors">
-                    Contact Us
+                  <Link href="/about" className="hover:text-white transition-colors">
+                    About Us
                   </Link>
                 </li>
+                <li>
+                  <Link href="/contact" className="hover:text-white transition-colors">
+                    Contact
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/careers" className="hover:text-white transition-colors">
+                    Careers
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/blog" className="hover:text-white transition-colors">
+                    Blog
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-4">Legal</h3>
+              <ul className="space-y-2 text-gray-400">
                 <li>
                   <Link href="/privacy" className="hover:text-white transition-colors">
                     Privacy Policy
@@ -287,36 +530,22 @@ export default function HomePage() {
                     Terms of Service
                   </Link>
                 </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Connect</h3>
-              <ul className="space-y-2 text-gray-400">
                 <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    Twitter
+                  <Link href="/security" className="hover:text-white transition-colors">
+                    Security
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    Instagram
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    Facebook
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    LinkedIn
+                  <Link href="/cookies" className="hover:text-white transition-colors">
+                    Cookie Policy
                   </Link>
                 </li>
               </ul>
             </div>
           </div>
+
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 MindReMinder. All rights reserved.</p>
+            <p>&copy; 2024 MindReMinder. All rights reserved. Made with ❤️ for a more mindful world.</p>
           </div>
         </div>
       </footer>

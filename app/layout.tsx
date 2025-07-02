@@ -2,20 +2,29 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "MindReMinder - Your Personal Mindfulness & Reminder App",
   description:
-    "Stay mindful, organized, and connected with MindReMinder. Set reminders, practice micro-actions, share inspirational quotes, and connect with friends.",
-  keywords: "mindfulness, reminders, productivity, wellness, quotes, micro-actions",
+    "Stay mindful, organized, and connected with MindReMinder. Get personalized reminders, inspirational quotes, and micro-actions to improve your daily life.",
+  keywords: "mindfulness, reminders, productivity, quotes, micro-actions, wellness",
   authors: [{ name: "MindReMinder Team" }],
   openGraph: {
     title: "MindReMinder - Your Personal Mindfulness & Reminder App",
     description: "Stay mindful, organized, and connected with MindReMinder.",
     type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MindReMinder - Your Personal Mindfulness & Reminder App",
+    description: "Stay mindful, organized, and connected with MindReMinder.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
     generator: 'v0.dev'
 }
@@ -26,12 +35,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-        </ThemeProvider>
-      </body>
+    <html lang="en">
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }
