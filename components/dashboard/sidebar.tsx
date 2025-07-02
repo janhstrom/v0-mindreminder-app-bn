@@ -2,25 +2,23 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { Home, Bell, Zap, BarChart3, Users, Settings, HelpCircle, Brain } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Home, Bell, Target, BarChart3, Users, Settings, Menu, Brain } from "lucide-react"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Reminders", href: "/dashboard/reminders", icon: Bell },
-  { name: "Micro Actions", href: "/dashboard/micro-actions", icon: Zap },
+  { name: "Micro Actions", href: "/dashboard/micro-actions", icon: Target },
   { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { name: "Friends", href: "/dashboard/friends", icon: Users },
 ]
 
-const secondaryNavigation = [
-  { name: "Settings", href: "/settings", icon: Settings },
-  { name: "Help", href: "/help", icon: HelpCircle },
-]
+const secondaryNavigation = [{ name: "Settings", href: "/settings", icon: Settings }]
 
 interface SidebarProps {
-  open?: boolean
-  setOpen?: (open: boolean) => void
+  open: boolean
+  setOpen: (open: boolean) => void
 }
 
 export function Sidebar({ open, setOpen }: SidebarProps) {
@@ -29,8 +27,12 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
   const SidebarContent = () => (
     <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4">
       <div className="flex h-16 shrink-0 items-center">
-        <Brain className="h-8 w-8 text-blue-600" />
-        <span className="ml-2 text-xl font-bold text-gray-900">MindReMinder</span>
+        <div className="flex items-center space-x-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
+            <Brain className="h-5 w-5 text-white" />
+          </div>
+          <span className="text-xl font-bold text-gray-900">MindReMinder</span>
+        </div>
       </div>
       <nav className="flex flex-1 flex-col">
         <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -97,8 +99,12 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
         <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-4">
           <div className="flex h-16 shrink-0 items-center">
-            <Brain className="h-8 w-8 text-blue-600" />
-            <span className="ml-2 text-xl font-bold text-gray-900">MindReMinder</span>
+            <div className="flex items-center space-x-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
+                <Brain className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-900">MindReMinder</span>
+            </div>
           </div>
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -161,6 +167,12 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
 
       {/* Mobile sidebar */}
       <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="sm" className="lg:hidden">
+            <Menu className="h-6 w-6" />
+            <span className="sr-only">Open sidebar</span>
+          </Button>
+        </SheetTrigger>
         <SheetContent side="left" className="w-72 p-0">
           <SidebarContent />
         </SheetContent>

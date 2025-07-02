@@ -1,28 +1,19 @@
-"use client"
-
 import { createClient } from "@/lib/supabase/client"
 
-export interface AuthUser {
+export interface User {
   id: string
   email: string
   firstName: string
   lastName: string
-  profileImage?: string
-  createdAt: Date
+  profileImage: string | null
+  createdAt: string
+  emailConfirmed: boolean
 }
 
 export class SupabaseAuthService {
-  private static instance: SupabaseAuthService
   private supabase = createClient()
 
-  static getInstance(): SupabaseAuthService {
-    if (!SupabaseAuthService.instance) {
-      SupabaseAuthService.instance = new SupabaseAuthService()
-    }
-    return SupabaseAuthService.instance
-  }
-
-  async getCurrentUser(): Promise<AuthUser | null> {
+  async getCurrentUser(): Promise<User | null> {
     try {
       const {
         data: { user },
@@ -33,7 +24,7 @@ export class SupabaseAuthService {
         return null
       }
 
-      // Get user profile
+      // Get profile data
       const { data: profile } = await this.supabase
         .from("profiles")
         .select("first_name, last_name, profile_image_url")
@@ -42,11 +33,12 @@ export class SupabaseAuthService {
 
       return {
         id: user.id,
-        email: user.email || "",
-        firstName: profile?.first_name || "",
-        lastName: profile?.last_name || "",
-        profileImage: profile?.profile_image_url || undefined,
-        createdAt: new Date(user.created_at),
+        email: user.email ?? "",
+        firstName: profile?.first_name ?? "",
+        lastName: profile?.last_name ?? "",
+        profileImage: profile?.profile_image_url ?? null,
+        createdAt: user.created_at,
+        emailConfirmed: !!user.email_confirmed_at,
       }
     } catch (error) {
       console.error("Error getting current user:", error)
@@ -55,17 +47,11 @@ export class SupabaseAuthService {
   }
 
   async signOut(): Promise<void> {
-    await this.supabase.auth.signOut()
-  }
-
-  onAuthStateChange(callback: (user: AuthUser | null) => void) {
-    return this.supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const authUser = await this.getCurrentUser()
-        callback(authUser)
-      } else {
-        callback(null)
-      }
-    })
+    const { error } = await this.supabase.auth.signOut()
+    if (error) {
+      throw error
+    }
   }
 }
+
+export const authService = new SupabaseAuthService()

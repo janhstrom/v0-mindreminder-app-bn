@@ -16,54 +16,69 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { createClient } from "@/lib/supabase/client"
 
 interface CreateMicroActionModalProps {
-  isOpen: boolean
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-export function CreateMicroActionModal({ isOpen, onClose }: CreateMicroActionModalProps) {
+export function CreateMicroActionModal({ open, onOpenChange }: CreateMicroActionModalProps) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [category, setCategory] = useState("")
-  const [estimatedTime, setEstimatedTime] = useState("2")
   const [isLoading, setIsLoading] = useState(false)
+  const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!title.trim() || !category) return
+
     setIsLoading(true)
 
     try {
-      // Here you would typically save to your database
-      console.log("Creating micro action:", { title, description, category, estimatedTime })
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error("Not authenticated")
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const { error } = await supabase.from("micro_actions").insert({
+        user_id: user.id,
+        title: title.trim(),
+        description: description.trim() || null,
+        category,
+        is_completed: false,
+      })
+
+      if (error) throw error
 
       // Reset form and close modal
       setTitle("")
       setDescription("")
       setCategory("")
-      setEstimatedTime("2")
-      onClose()
+      onOpenChange(false)
+
+      // Refresh the page to show new micro action
+      window.location.reload()
     } catch (error) {
       console.error("Error creating micro action:", error)
+      alert("Failed to create micro action. Please try again.")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create Micro Action</DialogTitle>
-          <DialogDescription>Add a small, actionable step that takes 2-5 minutes to complete.</DialogDescription>
+          <DialogDescription>Add a small, actionable step that takes just a few minutes to complete.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="title">Action Title</Label>
+              <Label htmlFor="title">Action Title *</Label>
               <Input
                 id="title"
                 value={title}
@@ -83,43 +98,29 @@ export function CreateMicroActionModal({ isOpen, onClose }: CreateMicroActionMod
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="category">Category</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Label htmlFor="category">Category *</Label>
+              <Select value={category} onValueChange={setCategory} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="health">Health & Wellness</SelectItem>
-                  <SelectItem value="productivity">Productivity</SelectItem>
-                  <SelectItem value="learning">Learning</SelectItem>
-                  <SelectItem value="relationships">Relationships</SelectItem>
-                  <SelectItem value="creativity">Creativity</SelectItem>
-                  <SelectItem value="organization">Organization</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="estimatedTime">Estimated Time (minutes)</Label>
-              <Select value={estimatedTime} onValueChange={setEstimatedTime}>
-                <SelectTrigger>
-                  <SelectValue placeholder="How long will this take?" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 minute</SelectItem>
-                  <SelectItem value="2">2 minutes</SelectItem>
-                  <SelectItem value="3">3 minutes</SelectItem>
-                  <SelectItem value="5">5 minutes</SelectItem>
-                  <SelectItem value="10">10 minutes</SelectItem>
+                  <SelectItem value="health">🌱 Health & Wellness</SelectItem>
+                  <SelectItem value="productivity">🎯 Productivity</SelectItem>
+                  <SelectItem value="learning">🧠 Learning</SelectItem>
+                  <SelectItem value="mindfulness">🧘 Mindfulness</SelectItem>
+                  <SelectItem value="social">💝 Social</SelectItem>
+                  <SelectItem value="creativity">🎨 Creativity</SelectItem>
+                  <SelectItem value="organization">📋 Organization</SelectItem>
+                  <SelectItem value="other">📝 Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || !title.trim() || !category}>
               {isLoading ? "Creating..." : "Create Action"}
             </Button>
           </DialogFooter>
