@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/client"
 
-export interface User {
+export interface AuthUser {
   id: string
   email: string
   firstName: string
@@ -13,7 +13,7 @@ export interface User {
 export class SupabaseAuthService {
   private supabase = createClient()
 
-  async getCurrentUser(): Promise<User | null> {
+  async getCurrentUser(): Promise<AuthUser | null> {
     try {
       const {
         data: { user },
@@ -48,6 +48,31 @@ export class SupabaseAuthService {
 
   async signOut(): Promise<void> {
     const { error } = await this.supabase.auth.signOut()
+    if (error) {
+      throw error
+    }
+  }
+
+  async updateProfile(updates: {
+    firstName?: string
+    lastName?: string
+    email?: string
+    profileImage?: string
+  }): Promise<void> {
+    const user = await this.getCurrentUser()
+    if (!user) throw new Error("No authenticated user")
+
+    const { error } = await this.supabase
+      .from("profiles")
+      .update({
+        first_name: updates.firstName,
+        last_name: updates.lastName,
+        email: updates.email,
+        profile_image_url: updates.profileImage,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.id)
+
     if (error) {
       throw error
     }
