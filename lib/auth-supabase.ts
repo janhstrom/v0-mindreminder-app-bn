@@ -126,3 +126,9 @@ export class AuthService {
 }
 
 export const authService = new AuthService()
+
+/**
+ * Alias export kept for backward-compatibility with modules that expect
+ * a named `SupabaseAuthService` export.
+ */
+export { AuthService as SupabaseAuthService }
