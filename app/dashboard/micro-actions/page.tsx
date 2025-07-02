@@ -7,9 +7,10 @@ import type { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Target, CheckCircle2, Circle, Zap } from "lucide-react"
+import { Plus, Target, CheckCircle2, Circle, Zap, Edit, Trash2 } from "lucide-react"
 import { Header } from "@/components/dashboard/header"
 import { Sidebar } from "@/components/dashboard/sidebar"
+import { CreateMicroActionModal } from "@/components/micro-actions/create-micro-action-modal"
 
 interface MicroAction {
   id: string
@@ -26,6 +27,7 @@ export default function MicroActionsPage() {
   const [microActions, setMicroActions] = useState<MicroAction[]>([])
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [microActionModalOpen, setMicroActionModalOpen] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -59,6 +61,19 @@ export default function MicroActionsPage() {
     }
 
     getUser()
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || !session) {
+        router.push("/login")
+      } else if (session?.user) {
+        setUser(session.user)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [router, supabase.auth])
 
   const fetchMicroActions = async (userId: string) => {
@@ -104,6 +119,24 @@ export default function MicroActionsPage() {
     }
   }
 
+  const deleteMicroAction = async (actionId: string) => {
+    try {
+      const { error } = await supabase.from("micro_actions").delete().eq("id", actionId)
+
+      if (error) {
+        console.error("Error deleting micro action:", error)
+        return
+      }
+
+      // Refresh micro actions
+      if (user) {
+        await fetchMicroActions(user.id)
+      }
+    } catch (error) {
+      console.error("Failed to delete micro action:", error)
+    }
+  }
+
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
       health: "bg-green-100 text-green-800",
@@ -133,18 +166,19 @@ export default function MicroActionsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={user} onMenuClick={() => setSidebarOpen(true)} />
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+      <div className="lg:pl-72">
+        <Header user={user} setSidebarOpen={setSidebarOpen} />
 
-      <div className="lg:pl-64">
-        <main className="p-6">
-          <div className="max-w-7xl mx-auto">
+        <main className="py-10">
+          <div className="px-4 sm:px-6 lg:px-8">
+            {/* Header */}
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Micro Actions</h1>
                 <p className="text-gray-600 mt-2">Small steps that lead to big changes</p>
               </div>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={() => setMicroActionModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="h-4 w-4 mr-2" />
                 New Micro Action
               </Button>
@@ -193,7 +227,7 @@ export default function MicroActionsPage() {
                   <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">No micro actions yet</h3>
                   <p className="text-gray-600 mb-6">Start with small actions to build lasting habits</p>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Button onClick={() => setMicroActionModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
                     <Plus className="h-4 w-4 mr-2" />
                     Create Micro Action
                   </Button>
@@ -220,14 +254,27 @@ export default function MicroActionsPage() {
                                   </CardDescription>
                                 )}
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleMicroActionComplete(action.id, action.is_completed)}
-                                className="ml-2 p-1"
-                              >
-                                <Circle className="h-5 w-5 text-gray-400" />
-                              </Button>
+                              <div className="flex items-center space-x-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleMicroActionComplete(action.id, action.is_completed)}
+                                  className="p-1"
+                                >
+                                  <Circle className="h-5 w-5 text-gray-400" />
+                                </Button>
+                                <Button variant="ghost" size="sm" className="p-1">
+                                  <Edit className="h-4 w-4 text-gray-400" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteMicroAction(action.id)}
+                                  className="p-1 text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
                           </CardHeader>
                           <CardContent>
@@ -258,14 +305,24 @@ export default function MicroActionsPage() {
                                   </CardDescription>
                                 )}
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleMicroActionComplete(action.id, action.is_completed)}
-                                className="ml-2 p-1"
-                              >
-                                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                              </Button>
+                              <div className="flex items-center space-x-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleMicroActionComplete(action.id, action.is_completed)}
+                                  className="p-1"
+                                >
+                                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteMicroAction(action.id)}
+                                  className="p-1 text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
                           </CardHeader>
                           <CardContent>
@@ -288,6 +345,9 @@ export default function MicroActionsPage() {
           </div>
         </main>
       </div>
+
+      {/* Modal */}
+      <CreateMicroActionModal open={microActionModalOpen} onOpenChange={setMicroActionModalOpen} />
     </div>
   )
 }

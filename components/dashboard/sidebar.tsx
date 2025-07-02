@@ -1,4 +1,5 @@
 "use client"
+
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -7,8 +8,8 @@ import { cn } from "@/lib/utils"
 import { Home, Bell, Target, Users, BarChart3, Settings, HelpCircle, X } from "lucide-react"
 
 interface SidebarProps {
-  isOpen: boolean
-  onClose: () => void
+  open: boolean
+  setOpen: (open: boolean) => void
 }
 
 const navigation = [
@@ -21,39 +22,41 @@ const navigation = [
   { name: "Help", href: "/help", icon: HelpCircle },
 ]
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ open, setOpen }: SidebarProps) {
   const pathname = usePathname()
 
   return (
     <>
       {/* Mobile overlay */}
-      {isOpen && <div className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden" onClick={onClose} />}
+      {open && <div className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden" onClick={() => setOpen(false)} />}
 
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
-          isOpen ? "translate-x-0" : "-translate-x-full",
+          "fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
+          open ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 lg:hidden">
+        {/* Logo section */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">M</span>
             </div>
             <span className="text-xl font-bold text-gray-900">MindReMinder</span>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={() => setOpen(false)} className="lg:hidden">
             <X className="h-5 w-5" />
           </Button>
         </div>
 
+        {/* Navigation */}
         <ScrollArea className="flex-1 p-4">
           <nav className="space-y-2">
             {navigation.map((item) => {
               const isActive = pathname === item.href
               return (
-                <Link key={item.name} href={item.href} onClick={onClose}>
+                <Link key={item.name} href={item.href} onClick={() => setOpen(false)}>
                   <Button
                     variant={isActive ? "secondary" : "ghost"}
                     className={cn("w-full justify-start", isActive && "bg-blue-50 text-blue-700 hover:bg-blue-100")}
