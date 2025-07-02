@@ -24,6 +24,10 @@ interface HeaderProps {
 export function Header({ user, profile }: HeaderProps) {
   const displayName = profile?.first_name ? `${profile.first_name} ${profile.last_name}` : user.email
 
+  const handleSignOut = async () => {
+    await signOut()
+  }
+
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
       <Sheet>
@@ -73,11 +77,7 @@ export function Header({ user, profile }: HeaderProps) {
           <DropdownMenuItem>Settings</DropdownMenuItem>
           <DropdownMenuItem>Support</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <form action={signOut}>
-            <button type="submit" className="w-full text-left">
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </button>
-          </form>
+          <DropdownMenuItem onSelect={handleSignOut}>Logout</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
