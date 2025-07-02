@@ -1,48 +1,46 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { authService } from "@/lib/auth-supabase"
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, firstName, lastName } = await request.json()
+    const body = await request.json()
+    const { email, password, full_name } = body
 
-    if (!email || !password || !firstName || !lastName) {
-      return NextResponse.json({ error: "All fields are required" }, { status: 400 })
+    // Validate input
+    if (!email || !password || !full_name) {
+      return NextResponse.json({ error: "Email, password, and full name are required" }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 })
+    }
 
-    // Sign up the user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Validate password strength
+    if (password.length < 6) {
+      return NextResponse.json({ error: "Password must be at least 6 characters long" }, { status: 400 })
+    }
+
+    console.log("Registering user with email:", email)
+
+    const result = await authService.register({
       email,
       password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-        },
-      },
+      full_name,
     })
 
-    if (authError) {
-      console.error("Auth signup error:", authError)
-      return NextResponse.json({ error: authError.message }, { status: 400 })
-    }
-
-    if (!authData.user) {
-      return NextResponse.json({ error: "Failed to create user" }, { status: 400 })
-    }
+    console.log("Registration result:", result)
 
     return NextResponse.json({
-      message: "Registration successful. Please check your email to confirm your account.",
-      user: {
-        id: authData.user.id,
-        email: authData.user.email,
-        firstName,
-        lastName,
-      },
+      message: "User registered successfully",
+      user: result.user,
     })
-  } catch (error: any) {
-    console.error("Registration error:", error)
-    return NextResponse.json({ error: error.message || "Registration failed" }, { status: 500 })
+  } catch (error) {
+    console.error("Registration API error:", error)
+
+    const errorMessage = error instanceof Error ? error.message : "Database error saving new user"
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

@@ -1,81 +1,82 @@
 import { createClient } from "@/lib/supabase/client"
+import type { User } from "@supabase/supabase-js"
 
-export interface User {
+export interface AuthUser {
   id: string
   email: string
-  firstName?: string
-  lastName?: string
+  full_name?: string
+  avatar_url?: string
 }
 
-export interface AuthState {
-  user: User | null
-  loading: boolean
+export interface LoginCredentials {
+  email: string
+  password: string
 }
 
-export class SupabaseAuthService {
-  private static instance: SupabaseAuthService
+export interface RegisterCredentials {
+  email: string
+  password: string
+  full_name: string
+}
+
+export class AuthService {
   private supabase = createClient()
 
-  static getInstance(): SupabaseAuthService {
-    if (!SupabaseAuthService.instance) {
-      SupabaseAuthService.instance = new SupabaseAuthService()
+  async login(credentials: LoginCredentials) {
+    try {
+      const { data, error } = await this.supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      })
+
+      if (error) {
+        console.error("Login error:", error)
+        throw new Error(error.message)
+      }
+
+      return { user: data.user, session: data.session }
+    } catch (error) {
+      console.error("Login service error:", error)
+      throw error
     }
-    return SupabaseAuthService.instance
   }
 
-  async signUp(email: string, password: string, firstName: string, lastName: string) {
+  async register(credentials: RegisterCredentials) {
     try {
+      console.log("Attempting to register user:", credentials.email)
+
       const { data, error } = await this.supabase.auth.signUp({
-        email,
-        password,
+        email: credentials.email,
+        password: credentials.password,
         options: {
           data: {
-            first_name: firstName,
-            last_name: lastName,
+            full_name: credentials.full_name,
           },
         },
       })
 
       if (error) {
-        console.error("Supabase signup error:", error)
+        console.error("Registration error:", error)
         throw new Error(error.message)
       }
 
-      return data
+      console.log("Registration successful:", data)
+      return { user: data.user, session: data.session }
     } catch (error) {
-      console.error("Auth service signup error:", error)
+      console.error("Registration service error:", error)
       throw error
     }
   }
 
-  async signIn(email: string, password: string) {
-    try {
-      const { data, error } = await this.supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        console.error("Supabase signin error:", error)
-        throw new Error(error.message)
-      }
-
-      return data
-    } catch (error) {
-      console.error("Auth service signin error:", error)
-      throw error
-    }
-  }
-
-  async signOut() {
+  async logout() {
     try {
       const { error } = await this.supabase.auth.signOut()
       if (error) {
-        console.error("Supabase signout error:", error)
+        console.error("Logout error:", error)
         throw new Error(error.message)
       }
     } catch (error) {
-      console.error("Auth service signout error:", error)
+      console.error("Logout service error:", error)
       throw error
     }
   }
@@ -87,37 +88,41 @@ export class SupabaseAuthService {
         error,
       } = await this.supabase.auth.getUser()
 
-      if (error || !user) {
+      if (error) {
+        console.error("Get current user error:", error)
         return null
       }
 
-      return {
-        id: user.id,
-        email: user.email!,
-        firstName: user.user_metadata?.first_name,
-        lastName: user.user_metadata?.last_name,
-      }
+      return user
     } catch (error) {
-      console.error("Error getting current user:", error)
+      console.error("Get current user service error:", error)
       return null
+    }
+  }
+
+  async updateProfile(updates: Partial<AuthUser>) {
+    try {
+      const { data, error } = await this.supabase.auth.updateUser({
+        data: updates,
+      })
+
+      if (error) {
+        console.error("Update profile error:", error)
+        throw new Error(error.message)
+      }
+
+      return data.user
+    } catch (error) {
+      console.error("Update profile service error:", error)
+      throw error
     }
   }
 
   onAuthStateChange(callback: (user: User | null) => void) {
     return this.supabase.auth.onAuthStateChange((event, session) => {
-      const user = session?.user
-      callback(
-        user
-          ? {
-              id: user.id,
-              email: user.email!,
-              firstName: user.user_metadata?.first_name,
-              lastName: user.user_metadata?.last_name,
-            }
-          : null,
-      )
+      callback(session?.user ?? null)
     })
   }
 }
 
-export const authService = SupabaseAuthService.getInstance()
+export const authService = new AuthService()

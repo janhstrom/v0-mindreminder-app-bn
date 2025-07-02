@@ -1,0 +1,293 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import type { User } from "@supabase/supabase-js"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Plus, Target, CheckCircle2, Circle, Zap } from "lucide-react"
+import { Header } from "@/components/dashboard/header"
+import { Sidebar } from "@/components/dashboard/sidebar"
+
+interface MicroAction {
+  id: string
+  title: string
+  description: string
+  category: string
+  is_completed: boolean
+  completed_at: string | null
+  created_at: string
+}
+
+export default function MicroActionsPage() {
+  const [user, setUser] = useState<User | null>(null)
+  const [microActions, setMicroActions] = useState<MicroAction[]>([])
+  const [loading, setLoading] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const router = useRouter()
+  const supabase = createClient()
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser()
+
+        if (error) {
+          console.error("Auth error:", error)
+          router.push("/login")
+          return
+        }
+
+        if (!user) {
+          router.push("/login")
+          return
+        }
+
+        setUser(user)
+        await fetchMicroActions(user.id)
+      } catch (error) {
+        console.error("Failed to get user:", error)
+        router.push("/login")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    getUser()
+  }, [router, supabase.auth])
+
+  const fetchMicroActions = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("micro_actions")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        console.error("Error fetching micro actions:", error)
+        return
+      }
+
+      setMicroActions(data || [])
+    } catch (error) {
+      console.error("Failed to fetch micro actions:", error)
+    }
+  }
+
+  const toggleMicroActionComplete = async (actionId: string, isCompleted: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("micro_actions")
+        .update({
+          is_completed: !isCompleted,
+          completed_at: !isCompleted ? new Date().toISOString() : null,
+        })
+        .eq("id", actionId)
+
+      if (error) {
+        console.error("Error updating micro action:", error)
+        return
+      }
+
+      // Refresh micro actions
+      if (user) {
+        await fetchMicroActions(user.id)
+      }
+    } catch (error) {
+      console.error("Failed to update micro action:", error)
+    }
+  }
+
+  const getCategoryColor = (category: string) => {
+    const colors: { [key: string]: string } = {
+      health: "bg-green-100 text-green-800",
+      productivity: "bg-blue-100 text-blue-800",
+      mindfulness: "bg-purple-100 text-purple-800",
+      learning: "bg-yellow-100 text-yellow-800",
+      social: "bg-pink-100 text-pink-800",
+      default: "bg-gray-100 text-gray-800",
+    }
+    return colors[category] || colors.default
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null
+  }
+
+  const completedActions = microActions.filter((action) => action.is_completed)
+  const pendingActions = microActions.filter((action) => !action.is_completed)
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header user={user} onMenuClick={() => setSidebarOpen(true)} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      <div className="lg:pl-64">
+        <main className="p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Micro Actions</h1>
+                <p className="text-gray-600 mt-2">Small steps that lead to big changes</p>
+              </div>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                New Micro Action
+              </Button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <Target className="h-8 w-8 text-blue-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Total Actions</p>
+                      <p className="text-2xl font-bold text-gray-900">{microActions.length}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <CheckCircle2 className="h-8 w-8 text-green-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Completed</p>
+                      <p className="text-2xl font-bold text-gray-900">{completedActions.length}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <Zap className="h-8 w-8 text-yellow-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Pending</p>
+                      <p className="text-2xl font-bold text-gray-900">{pendingActions.length}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {microActions.length === 0 ? (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No micro actions yet</h3>
+                  <p className="text-gray-600 mb-6">Start with small actions to build lasting habits</p>
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Micro Action
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                {/* Pending Actions */}
+                {pendingActions.length > 0 && (
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Pending Actions</h2>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {pendingActions.map((action) => (
+                        <Card key={action.id} className="hover:shadow-lg transition-shadow">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <CardTitle className="text-lg font-semibold text-gray-900 mb-1">
+                                  {action.title}
+                                </CardTitle>
+                                {action.description && (
+                                  <CardDescription className="text-sm text-gray-600">
+                                    {action.description}
+                                  </CardDescription>
+                                )}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleMicroActionComplete(action.id, action.is_completed)}
+                                className="ml-2 p-1"
+                              >
+                                <Circle className="h-5 w-5 text-gray-400" />
+                              </Button>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <Badge className={getCategoryColor(action.category)}>{action.category}</Badge>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Completed Actions */}
+                {completedActions.length > 0 && (
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Completed Actions</h2>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {completedActions.map((action) => (
+                        <Card key={action.id} className="opacity-75 hover:opacity-100 transition-opacity">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <CardTitle className="text-lg font-semibold text-gray-900 mb-1 line-through">
+                                  {action.title}
+                                </CardTitle>
+                                {action.description && (
+                                  <CardDescription className="text-sm text-gray-600">
+                                    {action.description}
+                                  </CardDescription>
+                                )}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleMicroActionComplete(action.id, action.is_completed)}
+                                className="ml-2 p-1"
+                              >
+                                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                              </Button>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="flex items-center justify-between">
+                              <Badge className={getCategoryColor(action.category)}>{action.category}</Badge>
+                              {action.completed_at && (
+                                <span className="text-xs text-gray-500">
+                                  Completed {new Date(action.completed_at).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
