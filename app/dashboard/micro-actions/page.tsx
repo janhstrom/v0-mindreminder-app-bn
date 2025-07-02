@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import type { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +10,9 @@ import { Plus, Target, CheckCircle2, Circle, Zap, Edit, Trash2 } from "lucide-re
 import { Header } from "@/components/dashboard/header"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { CreateMicroActionModal } from "@/components/micro-actions/create-micro-action-modal"
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+import { createClient as createServerClient } from "@/lib/supabase/server"
 
 interface MicroAction {
   id: string
@@ -22,82 +24,99 @@ interface MicroAction {
   created_at: string
 }
 
-export default function MicroActionsPage() {
-  const [user, setUser] = useState<User | null>(null)
-  const [microActions, setMicroActions] = useState<MicroAction[]>([])
+interface MicroActionsPageClientProps {
+  user: {
+    id: string
+    email: string
+    firstName: string
+    lastName: string
+    profileImage: string | null
+    createdAt: string
+    emailConfirmed: boolean
+  }
+}
+
+export default async function MicroActionsPage() {
+  const cookieStore = cookies()
+  const supabaseServer = createServerClient(cookieStore)
+
+  const {
+    data: { user },
+  } = await supabaseServer.auth.getUser()
+
+  if (!user) {
+    redirect("/login")
+  }
+
+  // Get user profile
+  const { data: profile } = await supabaseServer
+    .from("profiles")
+    .select("first_name, last_name, profile_image_url")
+    .eq("id", user.id)
+    .single()
+
+  const userData = {
+    id: user.id,
+    email: user.email || "",
+    firstName: profile?.first_name || "",
+    lastName: profile?.last_name || "",
+    profileImage: profile?.profile_image_url || null,
+    createdAt: user.created_at,
+    emailConfirmed: !!user.email_confirmed_at,
+  }
+
+  return <MicroActionsPageClient user={userData} />
+}
+
+function MicroActionsPageClient({ user }: MicroActionsPageClientProps) {
+  const [microActions, setMicroActions] = useState([])
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [microActionModalOpen, setMicroActionModalOpen] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  const supabaseClient = createClient()
 
   useEffect(() => {
-    const getUser = async () => {
+    const fetchMicroActions = async () => {
       try {
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser()
+        const { data, error } = await supabaseClient
+          .from("micro_actions")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
 
         if (error) {
-          console.error("Auth error:", error)
-          router.push("/login")
+          console.error("Error fetching micro actions:", error)
           return
         }
 
-        if (!user) {
-          router.push("/login")
-          return
-        }
-
-        setUser(user)
-        await fetchMicroActions(user.id)
+        setMicroActions(data || [])
       } catch (error) {
-        console.error("Failed to get user:", error)
-        router.push("/login")
+        console.error("Failed to fetch micro actions:", error)
       } finally {
         setLoading(false)
       }
     }
 
-    getUser()
+    fetchMicroActions()
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabaseClient.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" || !session) {
         router.push("/login")
       } else if (session?.user) {
-        setUser(session.user)
+        // Refresh user data
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [router, supabase.auth])
-
-  const fetchMicroActions = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("micro_actions")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-
-      if (error) {
-        console.error("Error fetching micro actions:", error)
-        return
-      }
-
-      setMicroActions(data || [])
-    } catch (error) {
-      console.error("Failed to fetch micro actions:", error)
-    }
-  }
+  }, [router, supabaseClient.auth, user.id])
 
   const toggleMicroActionComplete = async (actionId: string, isCompleted: boolean) => {
     try {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from("micro_actions")
         .update({
           is_completed: !isCompleted,
@@ -111,9 +130,7 @@ export default function MicroActionsPage() {
       }
 
       // Refresh micro actions
-      if (user) {
-        await fetchMicroActions(user.id)
-      }
+      await fetchMicroActions()
     } catch (error) {
       console.error("Failed to update micro action:", error)
     }
@@ -121,7 +138,7 @@ export default function MicroActionsPage() {
 
   const deleteMicroAction = async (actionId: string) => {
     try {
-      const { error } = await supabase.from("micro_actions").delete().eq("id", actionId)
+      const { error } = await supabaseClient.from("micro_actions").delete().eq("id", actionId)
 
       if (error) {
         console.error("Error deleting micro action:", error)
@@ -129,11 +146,28 @@ export default function MicroActionsPage() {
       }
 
       // Refresh micro actions
-      if (user) {
-        await fetchMicroActions(user.id)
-      }
+      await fetchMicroActions()
     } catch (error) {
       console.error("Failed to delete micro action:", error)
+    }
+  }
+
+  const fetchMicroActions = async () => {
+    try {
+      const { data, error } = await supabaseClient
+        .from("micro_actions")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        console.error("Error fetching micro actions:", error)
+        return
+      }
+
+      setMicroActions(data || [])
+    } catch (error) {
+      console.error("Failed to fetch micro actions:", error)
     }
   }
 
@@ -155,10 +189,6 @@ export default function MicroActionsPage() {
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     )
-  }
-
-  if (!user) {
-    return null
   }
 
   const completedActions = microActions.filter((action) => action.is_completed)

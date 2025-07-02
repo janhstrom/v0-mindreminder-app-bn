@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Menu, LogOut, Settings } from "lucide-react"
+import { Menu, LogOut, Settings, User } from "lucide-react"
 
 interface HeaderUser {
   id: string
@@ -62,14 +62,14 @@ export function Header({ user, setSidebarOpen }: HeaderProps) {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 px-4 py-4 lg:px-6">
+    <header className="bg-white border-b border-gray-200 px-4 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden">
             <Menu className="h-5 w-5" />
           </Button>
 
-          {/* Logo for mobile */}
+          {/* Logo for mobile only */}
           <div className="flex items-center space-x-3 lg:hidden ml-4">
             <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">M</span>
@@ -97,7 +97,7 @@ export function Header({ user, setSidebarOpen }: HeaderProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => router.push("/settings")}>
-                <Menu className="mr-2 h-4 w-4" />
+                <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push("/settings")}>

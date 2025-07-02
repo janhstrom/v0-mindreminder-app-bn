@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import type { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +10,9 @@ import { Plus, Bell, Calendar, Clock, CheckCircle2, Circle, Edit, Trash2 } from 
 import { Header } from "@/components/dashboard/header"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { CreateReminderModal } from "@/components/reminders/create-reminder-modal"
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+import { createClient as createServerClient } from "@/lib/supabase/server"
 
 interface Reminder {
   id: string
@@ -23,66 +25,98 @@ interface Reminder {
   created_at: string
 }
 
-export default function RemindersPage() {
-  const [user, setUser] = useState<User | null>(null)
-  const [reminders, setReminders] = useState<Reminder[]>([])
+function RemindersPageClient({ user }) {
+  const [reminders, setReminders] = useState([])
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [reminderModalOpen, setReminderModalOpen] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  const clientSupabase = createClient()
 
   useEffect(() => {
-    const getUser = async () => {
+    const fetchReminders = async () => {
       try {
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser()
+        const { data, error } = await clientSupabase
+          .from("reminders")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("reminder_time", { ascending: true })
 
         if (error) {
-          console.error("Auth error:", error)
-          router.push("/login")
+          console.error("Error fetching reminders:", error)
           return
         }
 
-        if (!user) {
-          router.push("/login")
-          return
-        }
-
-        setUser(user)
-        await fetchReminders(user.id)
+        setReminders(data || [])
       } catch (error) {
-        console.error("Failed to get user:", error)
-        router.push("/login")
+        console.error("Failed to fetch reminders:", error)
       } finally {
         setLoading(false)
       }
     }
 
-    getUser()
+    fetchReminders()
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = clientSupabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" || !session) {
         router.push("/login")
       } else if (session?.user) {
-        setUser(session.user)
+        // Update user data if needed
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [router, supabase.auth])
+  }, [router, clientSupabase.auth, user])
 
-  const fetchReminders = async (userId: string) => {
+  const toggleReminderComplete = async (reminderId: string, isCompleted: boolean) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await clientSupabase
+        .from("reminders")
+        .update({ is_completed: !isCompleted })
+        .eq("id", reminderId)
+
+      if (error) {
+        console.error("Error updating reminder:", error)
+        return
+      }
+
+      // Refresh reminders
+      await fetchReminders()
+    } catch (error) {
+      console.error("Failed to update reminder:", error)
+    }
+  }
+
+  const deleteReminder = async (reminderId: string) => {
+    try {
+      const { error } = await clientSupabase.from("reminders").delete().eq("id", reminderId)
+
+      if (error) {
+        console.error("Error deleting reminder:", error)
+        return
+      }
+
+      // Refresh reminders
+      await fetchReminders()
+    } catch (error) {
+      console.error("Failed to delete reminder:", error)
+    }
+  }
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleString()
+  }
+
+  const fetchReminders = async () => {
+    try {
+      const { data, error } = await clientSupabase
         .from("reminders")
         .select("*")
-        .eq("user_id", userId)
+        .eq("user_id", user.id)
         .order("reminder_time", { ascending: true })
 
       if (error) {
@@ -96,57 +130,12 @@ export default function RemindersPage() {
     }
   }
 
-  const toggleReminderComplete = async (reminderId: string, isCompleted: boolean) => {
-    try {
-      const { error } = await supabase.from("reminders").update({ is_completed: !isCompleted }).eq("id", reminderId)
-
-      if (error) {
-        console.error("Error updating reminder:", error)
-        return
-      }
-
-      // Refresh reminders
-      if (user) {
-        await fetchReminders(user.id)
-      }
-    } catch (error) {
-      console.error("Failed to update reminder:", error)
-    }
-  }
-
-  const deleteReminder = async (reminderId: string) => {
-    try {
-      const { error } = await supabase.from("reminders").delete().eq("id", reminderId)
-
-      if (error) {
-        console.error("Error deleting reminder:", error)
-        return
-      }
-
-      // Refresh reminders
-      if (user) {
-        await fetchReminders(user.id)
-      }
-    } catch (error) {
-      console.error("Failed to delete reminder:", error)
-    }
-  }
-
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleString()
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     )
-  }
-
-  if (!user) {
-    return null
   }
 
   const activeReminders = reminders.filter((r) => !r.is_completed)
@@ -380,4 +369,36 @@ export default function RemindersPage() {
       <CreateReminderModal open={reminderModalOpen} onOpenChange={setReminderModalOpen} />
     </div>
   )
+}
+
+export default async function RemindersPage() {
+  const cookieStore = cookies()
+  const supabase = createServerClient(cookieStore)
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect("/login")
+  }
+
+  // Get user profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("first_name, last_name, profile_image_url")
+    .eq("id", user.id)
+    .single()
+
+  const userData = {
+    id: user.id,
+    email: user.email || "",
+    firstName: profile?.first_name || "",
+    lastName: profile?.last_name || "",
+    profileImage: profile?.profile_image_url || null,
+    createdAt: user.created_at,
+    emailConfirmed: !!user.email_confirmed_at,
+  }
+
+  return <RemindersPageClient user={userData} />
 }
