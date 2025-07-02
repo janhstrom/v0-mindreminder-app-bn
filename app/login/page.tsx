@@ -1,34 +1,24 @@
-"use client"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
-import Link from "next/link"
-import { LoginForm } from "@/components/auth/login-form"
+import { LoginForm } from '@/components/auth/login-form'
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 
-export default function LoginPage({ searchParams }: { searchParams: { message: string } }) {
+export default async function LoginPage() {
+  const supabase = createClient()
+  const { data } = await supabase.auth.getUser()
+
+  if (data.user) {
+    redirect('/dashboard')
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="text-gray-600 mt-2">Sign in to continue your mindfulness journey.</p>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold tracking-tight text-gray-900">
+            Sign in to your account
+          </h2>
         </div>
-
-        {searchParams.message && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{searchParams.message}</AlertDescription>
-          </Alert>
-        )}
-
         <LoginForm />
-
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
-          <Link href="/register" className="font-medium text-blue-600 hover:underline">
-            Sign up
-          </Link>
-        </p>
       </div>
     </div>
   )

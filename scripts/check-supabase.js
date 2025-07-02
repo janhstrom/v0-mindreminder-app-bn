@@ -1,35 +1,51 @@
-// Check Supabase connection (requires dotenv)
-const fs = require("fs")
-const path = require("path")
+// This script checks the connection to Supabase and fetches the first 5 users.
+// It relies on environment variables being set in the execution environment.
+// It does NOT use dotenv.
 
-console.log("🔍 Checking Supabase setup...")
+import { createClient } from '@supabase/supabase-js'
 
-// Check if .env.local exists
-const envPath = path.join(process.cwd(), ".env.local")
-if (!fs.existsSync(envPath)) {
-  console.log("❌ .env.local file not found!")
-  console.log("\n📝 Create .env.local with:")
-  console.log("NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co")
-  console.log("NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here")
-  process.exit(1)
-}
-
-// Try to install and use dotenv
-try {
-  require("dotenv").config({ path: ".env.local" })
+async function checkSupabaseConnection() {
+  console.log('Attempting to connect to Supabase...')
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  console.log("Environment variables:")
-  console.log("NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? "✅ Set" : "❌ Missing")
-  console.log("NEXT_PUBLIC_SUPABASE_ANON_KEY:", supabaseKey ? "✅ Set" : "❌ Missing")
-
-  if (supabaseUrl && supabaseKey) {
-    console.log("\n🎉 Supabase credentials are configured!")
-    console.log("You can now run the database scripts in Supabase SQL Editor")
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Error: Supabase environment variables are not set.')
+    console.error('Please ensure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are available.')
+    process.exit(1)
   }
-} catch (error) {
-  console.log("❌ dotenv not installed. Run: npm install dotenv")
-  console.log("Error:", error.message)
+
+  console.log('Supabase URL found:', supabaseUrl.slice(0, 20) + '...')
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    console.log('Supabase client created successfully.')
+
+    console.log('Fetching first 5 users from auth.users...')
+    const { data: users, error } = await supabase.auth.admin.listUsers({
+        page: 1,
+        perPage: 5,
+    })
+
+    if (error) {
+      console.error('Error fetching users:', error.message)
+      return
+    }
+
+    if (users && users.users.length > 0) {
+      console.log('Successfully fetched users:')
+      users.users.forEach(user => {
+        console.log(`- User ID: ${user.id}, Email: ${user.email}`)
+      })
+    } else {
+      console.log('Connection successful, but no users found in the auth.users table.')
+    }
+
+    console.log('\nSupabase connection check complete.')
+  } catch (err) {
+    console.error('An unexpected error occurred:', err.message)
+  }
 }
+
+checkSupabaseConnection()

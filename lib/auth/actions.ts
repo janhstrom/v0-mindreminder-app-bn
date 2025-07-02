@@ -1,14 +1,32 @@
-"use server"
+'use server'
 
-import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { z } from 'zod'
 
-export async function login(formData: FormData) {
-  const supabase = await createClient()
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+});
 
-  const email = formData.get("email") as string
-  const password = formData.get("password") as string
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+});
+
+
+export async function login(prevState: any, formData: FormData) {
+  const supabase = createClient()
+  const validatedFields = loginSchema.safeParse(Object.fromEntries(formData.entries()));
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    }
+  }
+
+  const { email, password } = validatedFields.data;
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -16,43 +34,42 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
-    return redirect(`/login?message=${encodeURIComponent(error.message)}`)
+    return {
+      message: error.message,
+    }
   }
 
-  revalidatePath("/", "layout")
-  redirect("/dashboard")
+  revalidatePath('/', 'layout')
+  redirect('/dashboard')
 }
 
-export async function signup(formData: FormData) {
-  const supabase = await createClient()
+export async function signup(prevState: any, formData: FormData) {
+  const supabase = createClient()
+  const validatedFields = registerSchema.safeParse(Object.fromEntries(formData.entries()));
 
-  const email = formData.get("email") as string
-  const password = formData.get("password") as string
-  const firstName = formData.get("firstName") as string
-  const lastName = formData.get("lastName") as string
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    }
+  }
+  
+  const { email, password } = validatedFields.data;
 
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: {
-        first_name: firstName,
-        last_name: lastName,
-      },
+      // emailRedirectTo: `${origin}/auth/callback`,
     },
   })
 
   if (error) {
-    return redirect(`/register?message=${encodeURIComponent(error.message)}`)
+    return {
+      message: error.message,
+    }
   }
 
-  revalidatePath("/", "layout")
-  redirect("/login?message=Check email to continue sign in process")
-}
-
-export async function signOut() {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
-  revalidatePath("/", "layout")
-  redirect("/login")
+  // For now, we'll just redirect. In a real app, you'd want to show a "Check your email" message.
+  revalidatePath('/', 'layout')
+  redirect('/dashboard')
 }

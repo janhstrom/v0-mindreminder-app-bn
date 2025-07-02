@@ -1,28 +1,34 @@
--- Function to create a profile for a new user
+-- This function will be triggered after a new user is inserted into auth.users
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, first_name, last_name)
-  values (
-    new.id,
-    new.email,
-    new.raw_user_meta_data->>'first_name',
-    new.raw_user_meta_data->>'last_name'
-  );
+  insert into public.profiles (id, email)
+  values (new.id, new.email);
   return new;
 end;
 $$;
 
--- Trigger to call the function when a new user is created
+-- Drop existing trigger if it exists, to prevent errors on re-run
 drop trigger if exists on_auth_user_created on auth.users;
+
+-- Create the trigger
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- Grant usage on the sequence for profile IDs if it's not already there
--- This might be needed if your 'id' column in profiles has a default value like nextval('profiles_id_seq'::regclass)
--- In our case, we are using the user's auth.id, so this is less critical but good practice.
-grant usage, select on sequence public.profiles_id_seq to authenticated;
+-- Also, ensure RLS is enabled on the profiles table
+alter table public.profiles enable row level security;
+
+-- Create policies for profiles table if they don't exist
+-- 1. Allow users to see their own profile
+drop policy if exists "Users can view their own profile." on public.profiles;
+create policy "Users can view their own profile." on public.profiles
+  for select using (auth.uid() = id);
+
+-- 2. Allow users to update their own profile
+drop policy if exists "Users can update their own profile." on public.profiles;
+create policy "Users can update their own profile." on public.profiles
+  for update using (auth.uid() = id);

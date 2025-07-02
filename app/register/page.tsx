@@ -6,11 +6,20 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, CheckCircle } from "lucide-react"
+import { AlertCircle, CheckCircle } from 'lucide-react'
 import Link from "next/link"
 import { RegisterForm } from "@/components/auth/register-form"
+import { createClient as createServerClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 
-export default function RegisterPage({ searchParams }: { searchParams: { message: string } }) {
+export default async function RegisterPage() {
+  const supabaseClient = createServerClient()
+  const { data } = await supabaseClient.auth.getUser()
+
+  if (data.user) {
+    redirect('/dashboard')
+  }
+
   const [success, setSuccess] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -94,23 +103,14 @@ export default function RegisterPage({ searchParams }: { searchParams: { message
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Create an Account</h1>
-          <p className="text-gray-600 mt-2">Start your journey with MindReMinder today.</p>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold tracking-tight text-gray-900">
+            Create your account
+          </h2>
         </div>
-
-        {searchParams.message && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{searchParams.message}</AlertDescription>
-          </Alert>
-        )}
-
         <RegisterForm />
-
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{" "}
           <Link href="/login" className="font-medium text-blue-600 hover:underline">
